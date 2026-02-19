@@ -169,16 +169,104 @@ shape_by_type <- function(node_type, domain) {
 }
 
 ui <- navbarPage(
-  title = "BRIDGE-ABR AMR-SDG Explorer",
+  title = div(
+    class = "app-brand",
+    tags$img(
+      src = "logo-bridge-abr.svg",
+      alt = "BRIDGE-ABR logo",
+      class = "app-brand-logo"
+    ),
+    div(
+      class = "app-brand-text",
+      tags$span(class = "app-brand-kicker", "BRIDGE-ABR"),
+      tags$span(class = "app-brand-title", "AMR-SDG Policy Explorer")
+    )
+  ),
+  windowTitle = "BRIDGE-ABR AMR-SDG Explorer",
   id = "main_nav",
+  collapsible = TRUE,
 
   header = tags$head(
     tags$style(HTML(
       "
       body {
-        background: #eef1f4;
+        background: #edf2f7;
         color: #1f2933;
         font-family: 'Merriweather', Georgia, serif;
+      }
+      .navbar.navbar-default {
+        background: linear-gradient(120deg, #0b3c5d 0%, #155e75 52%, #1f7a8c 100%);
+        border: none;
+        box-shadow: 0 6px 14px rgba(9, 30, 66, 0.24);
+      }
+      .navbar.navbar-default .container-fluid {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+      .navbar-default .navbar-brand {
+        color: #ffffff !important;
+        height: 78px;
+        display: flex;
+        align-items: center;
+        padding: 10px 6px;
+      }
+      .app-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .app-brand-logo {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+        background: #ffffff;
+        padding: 5px;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.25);
+      }
+      .app-brand-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.08;
+      }
+      .app-brand-kicker {
+        color: #cbe8ff;
+        font-family: 'Source Sans Pro', Arial, sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+      }
+      .app-brand-title {
+        color: #ffffff;
+        font-size: 20px;
+        font-weight: 700;
+      }
+      .navbar-default .navbar-nav > li > a {
+        color: #d9e7f3 !important;
+        font-family: 'Source Sans Pro', Arial, sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        padding-top: 29px;
+        padding-bottom: 29px;
+        transition: background-color 0.15s ease, color 0.15s ease;
+      }
+      .navbar-default .navbar-nav > li > a:hover,
+      .navbar-default .navbar-nav > li > a:focus {
+        color: #ffffff !important;
+        background-color: rgba(255, 255, 255, 0.12) !important;
+      }
+      .navbar-default .navbar-nav > .active > a,
+      .navbar-default .navbar-nav > .active > a:hover,
+      .navbar-default .navbar-nav > .active > a:focus {
+        color: #ffffff !important;
+        background-color: rgba(1, 22, 39, 0.4) !important;
+      }
+      .navbar-default .navbar-toggle {
+        border-color: rgba(255, 255, 255, 0.6);
+        margin-top: 21px;
+      }
+      .navbar-default .navbar-toggle .icon-bar {
+        background-color: #ffffff;
       }
       .page-wrap {
         max-width: 1700px;
@@ -186,11 +274,11 @@ ui <- navbarPage(
         padding: 16px 18px 26px 18px;
       }
       .card {
-        background: #ffffff;
-        border: 1px solid #d8dee6;
-        border-radius: 8px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        border: 1px solid #d7e2ec;
+        border-radius: 12px;
         padding: 14px;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06);
       }
       .lead-note {
         font-size: 14px;
@@ -250,6 +338,46 @@ ui <- navbarPage(
         font-size: 14px;
         line-height: 1.45;
         margin-top: 10px;
+      }
+      .btn {
+        border-radius: 8px;
+        font-family: 'Source Sans Pro', Arial, sans-serif;
+        font-weight: 600;
+      }
+      .btn-primary {
+        background-color: #0f5f8d;
+        border-color: #0f5f8d;
+      }
+      .btn-primary:hover,
+      .btn-primary:focus {
+        background-color: #0b4f74;
+        border-color: #0b4f74;
+      }
+      .form-control,
+      .selectize-input {
+        border-radius: 8px;
+        border-color: #cbd5e1;
+      }
+      .selectize-input.focus {
+        border-color: #0f5f8d;
+        box-shadow: 0 0 0 0.2rem rgba(15, 95, 141, 0.18);
+      }
+      @media (max-width: 992px) {
+        .navbar-default .navbar-brand {
+          height: auto;
+          padding: 9px 8px;
+        }
+        .app-brand-logo {
+          width: 42px;
+          height: 42px;
+        }
+        .app-brand-title {
+          font-size: 16px;
+        }
+        .navbar-default .navbar-nav > li > a {
+          padding-top: 10px;
+          padding-bottom: 10px;
+        }
       }
       "
     ))

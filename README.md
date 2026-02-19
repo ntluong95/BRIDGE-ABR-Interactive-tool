@@ -12,6 +12,7 @@ A production-oriented Shiny app prototype for the BRIDGE-ABR workshop to visuali
 - `/app.R`: Shiny application
 - `/data/amr_sdg_nodes.csv`: node dictionary (SDGs, AMR drivers/responses, AMR outcomes)
 - `/data/amr_sdg_edges.csv`: interaction evidence table
+- `/www/logo-bridge-abr.svg`: default navbar logo (replace with your official logo if needed)
 
 ## Features
 
