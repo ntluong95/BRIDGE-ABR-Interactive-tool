@@ -1,0 +1,35 @@
+id,label,short_label,node_type,domain,theme,description
+sdg1,SDG 1 No Poverty,SDG 1,SDG Goal,SDG,Economy Poverty & Equity,Progress on poverty reduction can reduce pressure on informal antibiotic markets
+sdg2,SDG 2 Zero Hunger,SDG 2,SDG Goal,SDG,Agriculture & Food Systems,Food system priorities can shape antibiotic use in livestock and aquaculture
+sdg3,SDG 3 Good Health and Well-being,SDG 3,SDG Goal,SDG,Health Systems & Governance,Health system investments influence stewardship diagnostics and access
+sdg4,SDG 4 Quality Education,SDG 4,SDG Goal,SDG,Economy Poverty & Equity,Education and literacy can improve responsible antimicrobial use
+sdg5,SDG 5 Gender Equality,SDG 5,SDG Goal,SDG,Economy Poverty & Equity,Gender equity affects access to care diagnostics and effective antibiotics
+sdg6,SDG 6 Clean Water and Sanitation,SDG 6,SDG Goal,SDG,Environment & Climate Action,Water and sanitation systems shape environmental AMR transmission pathways
+sdg8,SDG 8 Decent Work and Economic Growth,SDG 8,SDG Goal,SDG,Economy Poverty & Equity,Growth incentives influence production systems pharmaceutical output and regulation
+sdg10,SDG 10 Reduced Inequalities,SDG 10,SDG Goal,SDG,Economy Poverty & Equity,Reducing inequality can improve equitable access to quality AMR services
+sdg12,SDG 12 Responsible Consumption and Production,SDG 12,SDG Goal,SDG,Environment & Climate Action,Cleaner production and waste controls can reduce AMR drivers
+sdg13,SDG 13 Climate Action,SDG 13,SDG Goal,SDG,Environment & Climate Action,Climate adaptation can reduce AMR pressures during extreme events
+sdg14,SDG 14 Life Below Water,SDG 14,SDG Goal,SDG,Environment & Climate Action,Aquatic ecosystem protection can reduce environmental AMR risk
+sdg15,SDG 15 Life on Land,SDG 15,SDG Goal,SDG,Environment & Climate Action,Land ecosystem governance influences terrestrial AMR exposure pathways
+sdg17,SDG 17 Partnerships for the Goals,SDG 17,SDG Goal,SDG,Health Systems & Governance,Partnerships can strengthen cross-sector AMR coordination and implementation
+amr_use_human,Human antibiotic use,Human AMU,AMR Driver,AMR,Health Systems & Governance,Patterns of human antibiotic consumption shape AMR selection pressure
+amr_use_livestock,Livestock antibiotic use,Livestock AMU,AMR Driver,AMR,Agriculture & Food Systems,Antibiotic use in livestock systems contributes to resistance risk
+amr_use_aquaculture,Aquaculture antibiotic use,Aquaculture AMU,AMR Driver,AMR,Agriculture & Food Systems,Antibiotic use in aquaculture can affect resistance in aquatic environments
+amr_stewardship,Antimicrobial stewardship programs,Stewardship,AMR Response,AMR,Health Systems & Governance,Stewardship programs support appropriate antibiotic prescribing and use
+amr_ipc,Infection prevention and control,IPC,AMR Response,AMR,Health Systems & Governance,Prevention and infection control can reduce avoidable antibiotic demand
+amr_surveillance,One Health AMR surveillance,Surveillance,AMR Response,AMR,Health Systems & Governance,Integrated AMR surveillance informs targeted policy responses
+amr_diagnostics,Access to quality diagnostics,Diagnostics,AMR Response,AMR,Health Systems & Governance,Diagnostics can reduce empirical treatment and improve targeting
+amr_vet_capacity,Veterinary service capacity,Vet capacity,AMR Response,AMR,Agriculture & Food Systems,Strong veterinary systems can reduce non-therapeutic antibiotic dependence
+amr_food_safety,Food safety and value chain governance,Food safety,AMR Response,AMR,Agriculture & Food Systems,Food safety governance can reduce resistant pathogen transmission in value chains
+amr_wash_systems,WASH and wastewater systems,WASH,AMR Response,AMR,Environment & Climate Action,Water treatment and sanitation can reduce resistance dissemination
+amr_pharma_emissions,Pharmaceutical manufacturing emissions,Pharma emissions,AMR Driver,AMR,Environment & Climate Action,Poorly controlled discharges can introduce antibiotic residues into ecosystems
+amr_env_reservoir,Environmental AMR reservoir,Env reservoir,AMR Driver,AMR,Environment & Climate Action,Environmental reservoirs can sustain and spread resistance determinants
+amr_informal_market,Informal antibiotic markets,Informal market,AMR Driver,AMR,Economy Poverty & Equity,Informal sales can increase unregulated antibiotic access and misuse
+amr_governance,Cross-sector AMR governance,Governance,AMR Response,AMR,Health Systems & Governance,Coordinated governance can align AMR and SDG policy implementation
+amr_climate_shocks,Climate-sensitive infection shocks,Climate shocks,AMR Driver,AMR,Environment & Climate Action,Climate shocks can increase infection burden and antibiotic demand
+amr_access,Access to effective antibiotics,Access,AMR Response,AMR,Economy Poverty & Equity,Reliable access can improve outcomes but may increase use without stewardship
+outcome_amr_burden,AMR disease burden,AMR burden,AMR Outcome,Outcome,Cross-theme,Population burden of infections with resistant pathogens
+outcome_treatment_failure,Treatment failure and prolonged illness,Treatment failure,AMR Outcome,Outcome,Cross-theme,Failure of first line treatment and prolonged disease episodes
+outcome_health_costs,Household and system health costs,Health costs,AMR Outcome,Outcome,Cross-theme,Direct and indirect costs associated with resistant infections
+outcome_productivity_loss,Productivity and livelihood loss,Productivity loss,AMR Outcome,Outcome,Cross-theme,Productivity losses and economic disruption related to AMR impacts
+outcome_equity_gap,Equity gap in AMR outcomes,Equity gap,AMR Outcome,Outcome,Cross-theme,Unequal AMR impacts across socioeconomic and gender groups
