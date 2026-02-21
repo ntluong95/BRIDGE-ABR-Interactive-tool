@@ -202,9 +202,9 @@ ui <- page_navbar(
   theme = bs_theme(
     version = 5,
     bg = "#F5F7FA",
-    fg = "#0F172A",
-    primary = "#155E75",
-    secondary = "#0F766E",
+    fg = "#111827",
+    primary = "#A4343A",
+    secondary = "#7F2A2F",
     base_font = font_google("Inter"),
     heading_font = font_google("Inter")
   ),
@@ -236,7 +236,7 @@ ui <- page_navbar(
           accordion(
             id = "filter_accordion",
             multiple = TRUE,
-            open = c("Families", "Country", "Theme", "Effect", "Evidence"),
+            open = c("Families"),
 
             accordion_panel(
               title = filter_title("diagram-3", "Interaction families"),
@@ -340,6 +340,7 @@ ui <- page_navbar(
           div(
             class = "sidebar-actions",
             actionButton("apply_filters", "Apply filters", class = "btn btn-primary btn-apply"),
+            actionButton("reset_filters_btn", "Reset", class = "btn btn-outline-primary btn-reset"),
             downloadButton("download_filtered_sidebar", "Download filtered", class = "btn btn-outline-primary btn-download")
           )
         ),
@@ -363,7 +364,7 @@ ui <- page_navbar(
               shinycssloaders::withSpinner(
                 visNetworkOutput("interaction_network", height = "620px"),
                 type = 4,
-                color = "#155E75"
+                color = "#A4343A"
               ),
               uiOutput("node_drawer")
             )
@@ -386,7 +387,7 @@ ui <- page_navbar(
             shinycssloaders::withSpinner(
               DTOutput("interaction_table"),
               type = 4,
-              color = "#155E75"
+              color = "#A4343A"
             )
           ),
 
@@ -396,7 +397,7 @@ ui <- page_navbar(
             shinycssloaders::withSpinner(
               DTOutput("country_summary_table"),
               type = 4,
-              color = "#155E75"
+              color = "#A4343A"
             )
           )
         )
@@ -415,7 +416,7 @@ ui <- page_navbar(
         shinycssloaders::withSpinner(
           DTOutput("node_table"),
           type = 4,
-          color = "#155E75"
+          color = "#A4343A"
         )
       ),
       div(
@@ -424,7 +425,7 @@ ui <- page_navbar(
         shinycssloaders::withSpinner(
           DTOutput("summary_table"),
           type = 4,
-          color = "#155E75"
+          color = "#A4343A"
         )
       )
     )
@@ -539,20 +540,7 @@ server <- function(input, output, session) {
     selected_node(NULL)
   })
 
-  observeEvent(input$apply_filters, {
-    applied_filters$family <- input$family_filter
-    applied_filters$country <- input$country_filter
-    applied_filters$theme <- input$theme_filter
-    applied_filters$effect <- input$effect_filter
-    applied_filters$evidence <- input$evidence_filter
-    applied_filters$focus_nodes <- input$focus_nodes
-    applied_filters$context_only <- isTRUE(input$context_only)
-    applied_filters$bidirectional_only <- isTRUE(input$bidirectional_only)
-    applied_filters$search_text <- input$search_text
-    selected_node(NULL)
-  })
-
-  observeEvent(input$clear_filters, {
+  reset_filter_state <- function() {
     updatePickerInput(session, "family_filter", selected = default_filters$family)
     updatePickerInput(session, "country_filter", selected = default_filters$country)
     updatePickerInput(session, "theme_filter", selected = default_filters$theme)
@@ -573,6 +561,27 @@ server <- function(input, output, session) {
     applied_filters$bidirectional_only <- default_filters$bidirectional_only
     applied_filters$search_text <- default_filters$search_text
     selected_node(NULL)
+  }
+
+  observeEvent(input$apply_filters, {
+    applied_filters$family <- input$family_filter
+    applied_filters$country <- input$country_filter
+    applied_filters$theme <- input$theme_filter
+    applied_filters$effect <- input$effect_filter
+    applied_filters$evidence <- input$evidence_filter
+    applied_filters$focus_nodes <- input$focus_nodes
+    applied_filters$context_only <- isTRUE(input$context_only)
+    applied_filters$bidirectional_only <- isTRUE(input$bidirectional_only)
+    applied_filters$search_text <- input$search_text
+    selected_node(NULL)
+  })
+
+  observeEvent(input$clear_filters, {
+    reset_filter_state()
+  })
+
+  observeEvent(input$reset_filters_btn, {
+    reset_filter_state()
   })
 
   filtered_interactions <- reactive({
@@ -675,6 +684,8 @@ server <- function(input, output, session) {
   output$interaction_network <- renderVisNetwork({
     df <- filtered_interactions()
     active_nodes <- unique(c(df$from, df$to, applied_filters$focus_nodes))
+    selected_id <- selected_node()
+    selected_id_safe <- if (is.null(selected_id) || length(selected_id) == 0) "__none__" else selected_id
 
     plot_nodes <- nodes %>%
       mutate(
@@ -689,12 +700,14 @@ server <- function(input, output, session) {
           description
         ),
         active = id %in% active_nodes,
+        is_selected = id == selected_id_safe,
         base_bg = ifelse(is_sdg, sdg_palette[id], amr_color),
         color.background = ifelse(active, base_bg, "#DDE4ED"),
-        color.border = ifelse(active, "#0F172A", "#A8B4C3"),
+        color.border = ifelse(is_selected, "#A4343A", ifelse(active, "#334155", "#A8B4C3")),
         font.color = ifelse(active, "#FFFFFF", "#6B7280"),
         shape = ifelse(node_group == "AMR", "diamond", "box"),
         size = case_when(
+          is_selected ~ ifelse(node_group == "AMR", 46, 36),
           node_group == "AMR" & active ~ 40,
           node_group == "AMR" ~ 34,
           active ~ 30,
@@ -819,13 +832,24 @@ server <- function(input, output, session) {
     tensions <- tensions[!is.na(tensions) & nzchar(tensions)]
     tensions <- head(tensions, 4)
 
+    evidence_mix <- related %>%
+      count(evidence_level, sort = TRUE)
+
+    related_preview <- related %>%
+      transmute(
+        relation = paste0(from_short, " -> ", to_short),
+        context = paste0(country, " | ", theme),
+        evidence_level
+      ) %>%
+      slice_head(n = 6)
+
     div(
       class = "node-drawer open",
       div(
-        class = "drawer-header",
+        class = "drawer-header drawer-header-brand",
         div(
           class = "drawer-title-wrap",
-          span(class = "drawer-chip", node_info$short_label),
+          span(class = "drawer-chip drawer-chip-brand", node_info$short_label),
           h4(node_info$label)
         ),
         actionLink("clear_selected_node", "Close", class = "drawer-close-link")
@@ -865,6 +889,25 @@ server <- function(input, output, session) {
       ),
       div(
         class = "drawer-section",
+        h5("Evidence mix"),
+        if (nrow(evidence_mix) == 0) {
+          p("No evidence labels in current filters.")
+        } else {
+          div(
+            class = "evidence-chip-wrap",
+            lapply(seq_len(nrow(evidence_mix)), function(i) {
+              ev_raw <- evidence_mix$evidence_level[i]
+              ev_cls <- paste0("evidence-", tolower(gsub("[^A-Za-z]", "", ev_raw)))
+              span(
+                class = paste("evidence-chip", ev_cls),
+                paste0(ev_raw, ": ", evidence_mix$n[i])
+              )
+            })
+          )
+        }
+      ),
+      div(
+        class = "drawer-section",
         h5("Top references"),
         if (nrow(top_refs) == 0) {
           p("No references in current filters.")
@@ -873,6 +916,30 @@ server <- function(input, output, session) {
             class = "drawer-list",
             lapply(seq_len(nrow(top_refs)), function(i) {
               tags$li(paste0(top_refs$reference[i], " (", top_refs$n[i], ")"))
+            })
+          )
+        }
+      ),
+      div(
+        class = "drawer-section",
+        h5("Related interactions"),
+        if (nrow(related_preview) == 0) {
+          p("No related interactions under current filters.")
+        } else {
+          div(
+            class = "interaction-list",
+            lapply(seq_len(nrow(related_preview)), function(i) {
+              ev_raw <- related_preview$evidence_level[i]
+              ev_cls <- paste0("evidence-", tolower(gsub("[^A-Za-z]", "", ev_raw)))
+              div(
+                class = "interaction-item",
+                div(class = "interaction-line", related_preview$relation[i]),
+                div(
+                  class = "interaction-meta",
+                  span(class = "interaction-context", related_preview$context[i]),
+                  span(class = paste("evidence-chip", ev_cls), ev_raw)
+                )
+              )
             })
           )
         }
