@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "cli": {
+      "source": "posit-dev/skills",
+      "sourceType": "github",
+      "computedHash": "c3636e77c4297f721b6dcb50dc954ad82e8eb1eb9f33730887f8da0b5da5da0d"
+    }
+  }
+}

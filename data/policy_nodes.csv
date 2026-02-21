@@ -1,0 +1,23 @@
+id,label,short_label,node_group,node_type,source_framework,description
+amr01,Improve awareness and understanding of AMR,AMR-01,AMR,AMR Objective,WHO GAP,Improve awareness and education on antimicrobial resistance across sectors
+amr02,Strengthen surveillance and research,AMR-02,AMR,AMR Objective,WHO GAP,Strengthen evidence generation and surveillance for AMR and antimicrobial use
+amr03,Reduce infection incidence through prevention,AMR-03,AMR,AMR Objective,WHO GAP,Reduce infection burden through sanitation hygiene and prevention measures
+amr04,Optimize antimicrobial use,AMR-04,AMR,AMR Objective,WHO GAP,Optimize antimicrobial use in human and animal health systems
+amr05,Ensure sustainable investment and innovation,AMR-05,AMR,AMR Objective,WHO GAP,Build sustainable investment and incentives for AMR response and innovation
+sdg01,No Poverty,SDG-01,SDG,SDG Goal,UN SDG,End poverty in all its forms everywhere
+sdg02,Zero Hunger,SDG-02,SDG,SDG Goal,UN SDG,End hunger achieve food security and promote sustainable agriculture
+sdg03,Good Health and Well-being,SDG-03,SDG,SDG Goal,UN SDG,Ensure healthy lives and promote well-being for all at all ages
+sdg04,Quality Education,SDG-04,SDG,SDG Goal,UN SDG,Ensure inclusive and equitable quality education and lifelong learning opportunities
+sdg05,Gender Equality,SDG-05,SDG,SDG Goal,UN SDG,Achieve gender equality and empower all women and girls
+sdg06,Clean Water and Sanitation,SDG-06,SDG,SDG Goal,UN SDG,Ensure availability and sustainable management of water and sanitation for all
+sdg07,Affordable and Clean Energy,SDG-07,SDG,SDG Goal,UN SDG,Ensure access to affordable reliable sustainable and modern energy for all
+sdg08,Decent Work and Economic Growth,SDG-08,SDG,SDG Goal,UN SDG,Promote sustained inclusive and sustainable economic growth and decent work
+sdg09,Industry Innovation and Infrastructure,SDG-09,SDG,SDG Goal,UN SDG,Build resilient infrastructure and foster inclusive sustainable innovation
+sdg10,Reduced Inequalities,SDG-10,SDG,SDG Goal,UN SDG,Reduce inequality within and among countries
+sdg11,Sustainable Cities and Communities,SDG-11,SDG,SDG Goal,UN SDG,Make cities and human settlements inclusive safe resilient and sustainable
+sdg12,Responsible Consumption and Production,SDG-12,SDG,SDG Goal,UN SDG,Ensure sustainable consumption and production patterns
+sdg13,Climate Action,SDG-13,SDG,SDG Goal,UN SDG,Take urgent action to combat climate change and its impacts
+sdg14,Life Below Water,SDG-14,SDG,SDG Goal,UN SDG,Conserve and sustainably use oceans seas and marine resources
+sdg15,Life on Land,SDG-15,SDG,SDG Goal,UN SDG,Protect restore and promote sustainable use of terrestrial ecosystems
+sdg16,Peace Justice and Strong Institutions,SDG-16,SDG,SDG Goal,UN SDG,Promote peaceful inclusive societies and effective accountable institutions
+sdg17,Partnerships for the Goals,SDG-17,SDG,SDG Goal,UN SDG,Strengthen means of implementation and revitalize the global partnership

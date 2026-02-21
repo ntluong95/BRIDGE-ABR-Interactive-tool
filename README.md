@@ -1,62 +1,73 @@
-# BRIDGE-ABR AMR-SDG Interactive Explorer
+# BRIDGE-ABR Policy Tension Explorer
 
-A production-oriented Shiny app prototype for the BRIDGE-ABR workshop to visualize:
+This app visualizes **policy-objective interactions only** at National Action Plan level:
 
-- AMR-SDG interactions
-- AMR-AMR interactions
-- SDG-SDG interactions
-- SDG-to-AMR outcome pathways
+- `AMR-AMR`
+- `SDG-SDG`
+- `AMR-SDG`
+
+It does **not** model AMR outcomes in this version.
+
+## Objective model
+
+- AMR side: **5 WHO Global Action Plan objectives** (`AMR-01` to `AMR-05`)
+- SDG side: **17 UN SDG goals** (`SDG-01` to `SDG-17`)
+
+## Included example
+
+The sample dataset includes the requested structure, including cases like:
+
+- `AMR-03` and `SDG-08` in `Country XXX`
+- Theme: `Agriculture & Food Systems`
 
 ## Files
 
-- `/app.R`: Shiny application
-- `/data/amr_sdg_nodes.csv`: node dictionary (SDGs, AMR drivers/responses, AMR outcomes)
-- `/data/amr_sdg_edges.csv`: interaction evidence table
-- `/www/logo-bridge-abr.svg`: default navbar logo (replace with your official logo if needed)
-
-## Features
-
-- Network explorer with filters for:
-  - interaction family
-  - theme
-  - effect on AMR risk
-  - evidence level
-  - context dependency and bidirectionality
-  - free text search
-- Detailed interaction and reference tables
-- Dedicated outcome-pathway tab to trace upstream links into a selected AMR outcome
-- Data and methods tab with node dictionary and interaction summary
-- CSV downloads for filtered interactions and outcome pathways
+- `/Users/luongnguyen/Library/CloudStorage/OneDrive-SharedLibraries-Uppsalauniversitet/ReAct - BRIDGE ABR project/03 Workshop/BRIDGE-ABR Interactive tool/app.R`
+- `/Users/luongnguyen/Library/CloudStorage/OneDrive-SharedLibraries-Uppsalauniversitet/ReAct - BRIDGE ABR project/03 Workshop/BRIDGE-ABR Interactive tool/data/policy_nodes.csv`
+- `/Users/luongnguyen/Library/CloudStorage/OneDrive-SharedLibraries-Uppsalauniversitet/ReAct - BRIDGE ABR project/03 Workshop/BRIDGE-ABR Interactive tool/data/policy_interactions.csv`
+- `/Users/luongnguyen/Library/CloudStorage/OneDrive-SharedLibraries-Uppsalauniversitet/ReAct - BRIDGE ABR project/03 Workshop/BRIDGE-ABR Interactive tool/www/logo-bridge-abr.svg`
 
 ## Data schema
 
-### `amr_sdg_nodes.csv`
+### `policy_nodes.csv`
+
 Required columns:
 
 - `id`
 - `label`
 - `short_label`
+- `node_group`
 - `node_type`
-- `domain`
-- `theme`
+- `source_framework`
 - `description`
 
-### `amr_sdg_edges.csv`
+### `policy_interactions.csv`
+
 Required columns:
 
 - `edge_id`
 - `from`
 - `to`
-- `interaction_family`
+- `interaction_family` (`AMR-AMR`, `SDG-SDG`, `AMR-SDG`)
+- `country`
 - `theme`
-- `effect`
+- `effect` (`Tension (trade-off)`, `Synergy (co-benefit)`, `Mixed / context-dependent`)
 - `direct_or_indirect`
 - `bidirectional`
 - `context_dependent`
-- `mechanism`
+- `interaction_summary`
 - `policy_tension`
 - `evidence_level`
 - `reference`
+
+## Features
+
+- Branded navbar with logo
+- Network visualization of policy objective interactions
+- Filters by family, country, theme, effect, evidence level, and objective focus
+- Search on policy tension and references
+- Filtered interaction table and country summary table
+- CSV export of current filtered view
 
 ## R package requirements
 
@@ -67,12 +78,5 @@ install.packages(c("shiny", "dplyr", "readr", "stringr", "DT", "visNetwork"))
 ## Run
 
 ```r
-shiny::runApp("app.R")
+shiny::runApp("/Users/luongnguyen/Library/CloudStorage/OneDrive-SharedLibraries-Uppsalauniversitet/ReAct - BRIDGE ABR project/03 Workshop/BRIDGE-ABR Interactive tool/app.R")
 ```
-
-## How to move from prototype to production data
-
-1. Replace `/data/amr_sdg_nodes.csv` with your reviewed node list.
-2. Replace `/data/amr_sdg_edges.csv` with curated evidence-coded interactions.
-3. Keep required column names exactly the same.
-4. Use `evidence_level` and `reference` to preserve traceability for policy dialogue.

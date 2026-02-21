@@ -27,145 +27,115 @@ suppressPackageStartupMessages({
 })
 
 data_dir <- "data"
-nodes_path <- file.path(data_dir, "amr_sdg_nodes.csv")
-edges_path <- file.path(data_dir, "amr_sdg_edges.csv")
+nodes_path <- file.path(data_dir, "policy_nodes.csv")
+interactions_path <- file.path(data_dir, "policy_interactions.csv")
 
-if (!file.exists(nodes_path) || !file.exists(edges_path)) {
-  stop("Missing data files. Expected data/amr_sdg_nodes.csv and data/amr_sdg_edges.csv")
+if (!file.exists(nodes_path) || !file.exists(interactions_path)) {
+  stop("Missing data files. Expected data/policy_nodes.csv and data/policy_interactions.csv")
 }
 
 nodes <- read_csv(nodes_path, show_col_types = FALSE)
-edges <- read_csv(edges_path, show_col_types = FALSE)
+interactions <- read_csv(interactions_path, show_col_types = FALSE)
 
-required_nodes_cols <- c(
-  "id", "label", "short_label", "node_type", "domain", "theme", "description"
+required_node_cols <- c(
+  "id", "label", "short_label", "node_group", "node_type", "source_framework", "description"
 )
-
-required_edges_cols <- c(
-  "edge_id", "from", "to", "interaction_family", "theme", "effect",
-  "direct_or_indirect", "bidirectional", "context_dependent", "mechanism",
+required_interaction_cols <- c(
+  "edge_id", "from", "to", "interaction_family", "country", "theme", "effect",
+  "direct_or_indirect", "bidirectional", "context_dependent", "interaction_summary",
   "policy_tension", "evidence_level", "reference"
 )
 
-if (!all(required_nodes_cols %in% names(nodes))) {
-  stop("data/amr_sdg_nodes.csv is missing required columns")
+if (!all(required_node_cols %in% names(nodes))) {
+  stop("data/policy_nodes.csv is missing required columns")
 }
-
-if (!all(required_edges_cols %in% names(edges))) {
-  stop("data/amr_sdg_edges.csv is missing required columns")
+if (!all(required_interaction_cols %in% names(interactions))) {
+  stop("data/policy_interactions.csv is missing required columns")
 }
 
 nodes <- nodes %>%
   mutate(
     across(where(is.character), str_squish),
-    id = tolower(id)
+    id = str_to_lower(id)
   )
 
-edges <- edges %>%
+interactions <- interactions %>%
   mutate(
     across(where(is.character), str_squish),
-    from = tolower(from),
-    to = tolower(to),
+    from = str_to_lower(from),
+    to = str_to_lower(to),
     bidirectional = as.logical(bidirectional),
     context_dependent = as.logical(context_dependent)
   )
 
-unknown_from <- setdiff(unique(edges$from), nodes$id)
-unknown_to <- setdiff(unique(edges$to), nodes$id)
-
-if (length(unknown_from) > 0 || length(unknown_to) > 0) {
-  stop("Edge table contains node ids not found in nodes table")
-}
-
 if (anyDuplicated(nodes$id) > 0) {
-  stop("Duplicate node ids found in data/amr_sdg_nodes.csv")
+  stop("Duplicate node ids found in data/policy_nodes.csv")
 }
-
-if (anyDuplicated(edges$edge_id) > 0) {
-  stop("Duplicate edge ids found in data/amr_sdg_edges.csv")
+if (anyDuplicated(interactions$edge_id) > 0) {
+  stop("Duplicate edge ids found in data/policy_interactions.csv")
+}
+if (any(!interactions$from %in% nodes$id) || any(!interactions$to %in% nodes$id)) {
+  stop("Interaction table contains node ids not found in policy_nodes.csv")
 }
 
 node_lookup <- nodes %>%
-  select(id, label, short_label, node_type, domain, node_theme = theme)
+  select(id, label, short_label, node_group, node_type)
 
-edges_enriched <- edges %>%
+interactions_enriched <- interactions %>%
   left_join(node_lookup, by = c("from" = "id")) %>%
   rename(
     from_label = label,
     from_short = short_label,
-    from_type = node_type,
-    from_domain = domain,
-    from_theme = node_theme
+    from_group = node_group,
+    from_type = node_type
   ) %>%
   left_join(node_lookup, by = c("to" = "id")) %>%
   rename(
     to_label = label,
     to_short = short_label,
-    to_type = node_type,
-    to_domain = domain,
-    to_theme = node_theme
+    to_group = node_group,
+    to_type = node_type
   ) %>%
   mutate(
     search_blob = str_to_lower(
       paste(
         edge_id,
-        from_label,
-        to_label,
-        interaction_family,
+        country,
         theme,
+        interaction_family,
         effect,
-        mechanism,
+        from_short,
+        to_short,
+        interaction_summary,
         policy_tension,
-        reference,
-        evidence_level
+        evidence_level,
+        reference
       )
     )
   )
 
-family_levels <- c(
-  "AMR-SDG",
-  "AMR-AMR",
-  "SDG-SDG",
-  "SDG-to-AMR Outcome",
-  "AMR-to-AMR Outcome"
-)
-
-family_choices <- c(
-  family_levels,
-  setdiff(sort(unique(edges_enriched$interaction_family)), family_levels)
-)
-
-theme_choices <- sort(unique(edges_enriched$theme))
-effect_choices <- c(
-  "Increase AMR risk",
-  "Reduce AMR risk",
-  "Mixed / context-dependent"
-)
+family_choices <- c("AMR-AMR", "SDG-SDG", "AMR-SDG")
+family_choices <- intersect(family_choices, sort(unique(interactions_enriched$interaction_family)))
+country_choices <- sort(unique(interactions_enriched$country))
+theme_choices <- sort(unique(interactions_enriched$theme))
+effect_choices <- c("Tension (trade-off)", "Synergy (co-benefit)", "Mixed / context-dependent")
+effect_choices <- intersect(effect_choices, sort(unique(interactions_enriched$effect)))
 evidence_choices <- c("High", "Medium", "Emerging")
+evidence_choices <- intersect(evidence_choices, sort(unique(interactions_enriched$evidence_level)))
+objective_choices <- setNames(nodes$id, paste0(nodes$short_label, " - ", nodes$label))
 
-all_node_choices <- setNames(nodes$id, paste0(nodes$label, " (", nodes$short_label, ")"))
-outcome_nodes <- nodes %>% filter(node_type == "AMR Outcome")
-outcome_choices <- setNames(outcome_nodes$id, outcome_nodes$label)
-
-domain_palette <- c(
+node_group_palette <- c(
   "AMR" = "#0f766e",
-  "SDG" = "#1d4ed8",
-  "Outcome" = "#b45309"
+  "SDG" = "#1d4ed8"
 )
-
 effect_palette <- c(
-  "Increase AMR risk" = "#b91c1c",
-  "Reduce AMR risk" = "#15803d",
+  "Tension (trade-off)" = "#b91c1c",
+  "Synergy (co-benefit)" = "#15803d",
   "Mixed / context-dependent" = "#4b5563"
 )
 
-shape_by_type <- function(node_type, domain) {
-  case_when(
-    node_type == "AMR Outcome" ~ "star",
-    domain == "SDG" ~ "box",
-    node_type == "AMR Response" ~ "diamond",
-    TRUE ~ "ellipse"
-  )
+shape_by_group <- function(group_value) {
+  ifelse(group_value == "AMR", "diamond", "box")
 }
 
 ui <- navbarPage(
@@ -179,10 +149,10 @@ ui <- navbarPage(
     div(
       class = "app-brand-text",
       tags$span(class = "app-brand-kicker", "BRIDGE-ABR"),
-      tags$span(class = "app-brand-title", "AMR-SDG Policy Explorer")
+      tags$span(class = "app-brand-title", "Policy Tension Explorer")
     )
   ),
-  windowTitle = "BRIDGE-ABR AMR-SDG Explorer",
+  windowTitle = "BRIDGE-ABR Policy Tension Explorer",
   id = "main_nav",
   collapsible = TRUE,
 
@@ -282,7 +252,7 @@ ui <- navbarPage(
       }
       .lead-note {
         font-size: 14px;
-        line-height: 1.45;
+        line-height: 1.48;
         margin-bottom: 14px;
       }
       .section-title {
@@ -334,11 +304,6 @@ ui <- navbarPage(
         font-family: 'Source Sans Pro', Arial, sans-serif;
         font-size: 13px;
       }
-      .pathway-summary {
-        font-size: 14px;
-        line-height: 1.45;
-        margin-top: 10px;
-      }
       .btn {
         border-radius: 8px;
         font-family: 'Source Sans Pro', Arial, sans-serif;
@@ -384,20 +349,21 @@ ui <- navbarPage(
   ),
 
   tabPanel(
-    title = "Network Explorer",
+    title = "Policy Tension Explorer",
     div(
       class = "page-wrap",
-      h2("AMR-SDG interaction network"),
+      h2("National Action Plan policy tensions and synergies"),
       div(
         class = "lead-note",
         p(
-          "This app maps the policy tensions and synergies described in the BRIDGE-ABR concept note.",
-          "You can filter AMR-SDG links, AMR-AMR dynamics, SDG-SDG interactions, and direct pathways",
-          "to AMR outcomes."
+          "This version visualizes only policy-objective interactions:",
+          strong(" AMR-AMR, SDG-SDG, and AMR-SDG "),
+          "at national action plan level."
         ),
         p(
-          strong("Interpretation:"),
-          " red edges increase AMR risk, green edges reduce AMR risk, and gray edges are context-dependent."
+          "AMR nodes are the", strong("5 WHO Global Action Plan objectives"),
+          "and SDG nodes are the", strong("17 UN SDGs"),
+          ". Example included in sample data: AMR-03 vs SDG-08 in Country XXX under Agriculture and Food Systems."
         )
       ),
 
@@ -413,6 +379,15 @@ ui <- navbarPage(
               choices = family_choices,
               selected = family_choices
             ),
+            div(class = "section-title", "Country or NAP context"),
+            selectizeInput(
+              "country_filter",
+              label = NULL,
+              choices = country_choices,
+              selected = country_choices,
+              multiple = TRUE,
+              options = list(placeholder = "Select one or multiple countries")
+            ),
             div(class = "section-title", "Themes"),
             checkboxGroupInput(
               "theme_filter",
@@ -420,7 +395,7 @@ ui <- navbarPage(
               choices = theme_choices,
               selected = theme_choices
             ),
-            div(class = "section-title", "Effect on AMR outcomes"),
+            div(class = "section-title", "Interaction effect"),
             checkboxGroupInput(
               "effect_filter",
               label = NULL,
@@ -435,22 +410,22 @@ ui <- navbarPage(
               selected = evidence_choices,
               inline = TRUE
             ),
-            div(class = "section-title", "Focus nodes (optional)"),
+            div(class = "section-title", "Focus objectives (optional)"),
             selectizeInput(
               "focus_nodes",
               label = NULL,
-              choices = all_node_choices,
+              choices = objective_choices,
               selected = character(0),
               multiple = TRUE,
-              options = list(placeholder = "Type to select AMR or SDG nodes")
+              options = list(placeholder = "Type AMR-03 or SDG-08")
             ),
             textInput(
               "search_text",
-              "Search mechanism, tension, source",
+              "Search policy tension or reference",
               value = ""
             ),
-            checkboxInput("context_only", "Only context-dependent links", FALSE),
-            checkboxInput("bidirectional_only", "Only bidirectional links", FALSE),
+            checkboxInput("context_only", "Only context-dependent interactions", FALSE),
+            checkboxInput("bidirectional_only", "Only bidirectional interactions", FALSE),
             div(
               class = "control-buttons",
               actionButton("reset_filters", "Reset filters"),
@@ -463,7 +438,7 @@ ui <- navbarPage(
           width = 8,
           div(
             class = "card",
-            visNetworkOutput("interaction_network", height = "650px"),
+            visNetworkOutput("interaction_network", height = "680px"),
             div(
               class = "legend-row",
               div(class = "legend-chip", span(class = "legend-line"), span("Direct")),
@@ -471,17 +446,27 @@ ui <- navbarPage(
               div(
                 class = "legend-chip",
                 span(class = "legend-dot", style = "background:#b91c1c;"),
-                span("Increase AMR risk")
+                span("Tension (trade-off)")
               ),
               div(
                 class = "legend-chip",
                 span(class = "legend-dot", style = "background:#15803d;"),
-                span("Reduce AMR risk")
+                span("Synergy (co-benefit)")
               ),
               div(
                 class = "legend-chip",
                 span(class = "legend-dot", style = "background:#4b5563;"),
                 span("Mixed / context-dependent")
+              ),
+              div(
+                class = "legend-chip",
+                span(class = "legend-dot", style = "background:#0f766e;"),
+                span("AMR objective")
+              ),
+              div(
+                class = "legend-chip",
+                span(class = "legend-dot", style = "background:#1d4ed8;"),
+                span("SDG goal")
               )
             ),
             div(class = "kpi-row", textOutput("kpi_text"))
@@ -491,112 +476,40 @@ ui <- navbarPage(
 
       div(
         class = "table-block card",
-        h4("Filtered interactions"),
+        h4("Filtered policy interactions"),
         DTOutput("interaction_table")
       ),
 
       div(
         class = "table-block card",
-        h4("References in current filtered view"),
-        DTOutput("reference_table")
+        h4("Country summary in current filtered view"),
+        DTOutput("country_summary_table")
       )
     )
   ),
 
   tabPanel(
-    title = "Outcome Pathways",
+    title = "Objective Dictionary",
     div(
       class = "page-wrap",
-      h2("Pathways to AMR outcomes"),
+      h2("WHO GAP and SDG objective dictionary"),
       div(
-        class = "lead-note",
+        class = "lead-note card",
         p(
-          "This view traces upstream links into one AMR outcome.",
-          "Use pathway depth to show immediate drivers or broader chains."
-        )
-      ),
-
-      fluidRow(
-        column(
-          width = 4,
-          div(
-            class = "card",
-            selectInput(
-              "outcome_target",
-              "Select AMR outcome",
-              choices = outcome_choices,
-              selected = outcome_nodes$id[1]
-            ),
-            sliderInput(
-              "path_depth",
-              "Pathway depth",
-              min = 1,
-              max = 3,
-              value = 2,
-              step = 1
-            ),
-            checkboxGroupInput(
-              "pathway_theme",
-              "Themes in pathway",
-              choices = theme_choices,
-              selected = theme_choices
-            ),
-            checkboxGroupInput(
-              "pathway_effect",
-              "Effects in pathway",
-              choices = effect_choices,
-              selected = effect_choices
-            ),
-            downloadButton("download_pathway", "Download pathway CSV")
-          )
-        ),
-        column(
-          width = 8,
-          div(
-            class = "card",
-            visNetworkOutput("pathway_network", height = "620px"),
-            uiOutput("pathway_summary")
-          )
-        )
-      ),
-
-      div(
-        class = "table-block card",
-        h4("Pathway interactions"),
-        DTOutput("pathway_table")
-      )
-    )
-  ),
-
-  tabPanel(
-    title = "Methods & Data",
-    div(
-      class = "page-wrap",
-      h2("Product scope and data"),
-      div(
-        class = "card",
-        p(
-          "The current product version encodes workshop-relevant interfaces from the BRIDGE-ABR concept note",
-          "across three thematic domains: Agriculture and Food Systems, Environment and Climate Action,",
-          "and Economy Poverty and Equity, with additional Health Systems and Governance links."
+          "Nodes are fixed to WHO GAP AMR objectives (AMR-01 to AMR-05) and UN SDGs (SDG-01 to SDG-17)."
         ),
         p(
-          "You can replace the CSV files in /data with your own validated interaction evidence.",
-          "Keep all required columns unchanged to ensure compatibility with the app logic."
-        ),
-        tags$ul(
-          tags$li("Nodes file: data/amr_sdg_nodes.csv"),
-          tags$li("Edges file: data/amr_sdg_edges.csv")
+          "Interactions are expected to be coded from national action plans or policy documents with country and theme metadata."
         )
       ),
       div(
         class = "table-block card",
-        h4("Node dictionary"),
+        h4("Objective list"),
         DTOutput("node_table")
       ),
       div(
         class = "table-block card",
-        h4("Interaction summary by family, theme, and effect"),
+        h4("Interaction counts by family, country, and effect"),
         DTOutput("summary_table")
       )
     )
@@ -604,11 +517,17 @@ ui <- navbarPage(
 )
 
 server <- function(input, output, session) {
-  filtered_edges <- reactive({
-    df <- edges_enriched
+  filtered_interactions <- reactive({
+    df <- interactions_enriched
 
     if (length(input$family_filter) > 0) {
       df <- df %>% filter(interaction_family %in% input$family_filter)
+    } else {
+      df <- df[0, ]
+    }
+
+    if (length(input$country_filter) > 0) {
+      df <- df %>% filter(country %in% input$country_filter)
     } else {
       df <- df[0, ]
     }
@@ -647,6 +566,7 @@ server <- function(input, output, session) {
     if (is.null(search_text)) {
       search_text <- ""
     }
+
     search_term <- str_to_lower(str_trim(search_text))
     if (nchar(search_term) > 0) {
       df <- df %>% filter(str_detect(search_blob, fixed(search_term)))
@@ -657,6 +577,7 @@ server <- function(input, output, session) {
 
   observeEvent(input$reset_filters, {
     updateCheckboxGroupInput(session, "family_filter", selected = family_choices)
+    updateSelectizeInput(session, "country_filter", selected = country_choices, server = TRUE)
     updateCheckboxGroupInput(session, "theme_filter", selected = theme_choices)
     updateCheckboxGroupInput(session, "effect_filter", selected = effect_choices)
     updateCheckboxGroupInput(session, "evidence_filter", selected = evidence_choices)
@@ -667,42 +588,37 @@ server <- function(input, output, session) {
   })
 
   output$kpi_text <- renderText({
-    df <- filtered_edges()
+    df <- filtered_interactions()
     visible_nodes <- unique(c(df$from, df$to))
     paste0(
-      "Visible links: ", nrow(df),
-      " | Visible nodes: ", length(visible_nodes),
-      " | Interaction families: ", dplyr::n_distinct(df$interaction_family)
+      "Visible interactions: ", nrow(df),
+      " | Objectives in view: ", length(visible_nodes),
+      " | Countries: ", dplyr::n_distinct(df$country),
+      " | Themes: ", dplyr::n_distinct(df$theme)
     )
   })
 
   output$interaction_network <- renderVisNetwork({
-    df <- filtered_edges()
-
+    df <- filtered_interactions()
     active_nodes <- unique(c(df$from, df$to, input$focus_nodes))
 
     plot_nodes <- nodes %>%
       mutate(
         active = id %in% active_nodes,
-        group = domain,
         label_plot = short_label,
         title = paste0(
-          "<b>", label, "</b><br>",
+          "<b>", short_label, "</b><br>",
+          label, "<br>",
           "Type: ", node_type, "<br>",
-          "Theme: ", theme, "<br>",
-          description
+          "Framework: ", source_framework
         ),
-        shape = shape_by_type(node_type, domain),
-        color.background = ifelse(active, domain_palette[domain], "#d4d8df"),
+        shape = shape_by_group(node_group),
+        color.background = ifelse(active, node_group_palette[node_group], "#d4d8df"),
         color.border = ifelse(active, "#1f2937", "#9ca3af"),
         font.color = ifelse(active, "#0f172a", "#6b7280"),
-        size = case_when(
-          node_type == "AMR Outcome" ~ 34,
-          node_type == "SDG Goal" ~ 26,
-          active ~ 23,
-          TRUE ~ 18
-        )
+        size = ifelse(active, 30, 20)
       )
+
     plot_nodes$color <- I(Map(
       function(background, border) list(background = background, border = border),
       plot_nodes$color.background,
@@ -712,12 +628,13 @@ server <- function(input, output, session) {
       plot_nodes$font.color,
       function(x) list(color = x, face = "Merriweather", size = 14)
     ))
+
     plot_nodes <- plot_nodes %>%
       transmute(
         id,
         label = label_plot,
         title,
-        group,
+        group = node_group,
         shape,
         color,
         font,
@@ -729,14 +646,15 @@ server <- function(input, output, session) {
         mutate(
           edge_color = effect_palette[effect],
           edge_title = paste0(
-            "<b>", from_label, " -> ", to_label, "</b><br>",
-            "Family: ", interaction_family, "<br>",
+            "<b>", from_short, " -> ", to_short, "</b><br>",
+            "Country: ", country, "<br>",
             "Theme: ", theme, "<br>",
+            "Family: ", interaction_family, "<br>",
             "Effect: ", effect, "<br>",
-            "Mechanism: ", mechanism, "<br>",
             "Policy tension: ", policy_tension, "<br>",
+            "Summary: ", interaction_summary, "<br>",
             "Evidence: ", evidence_level, "<br>",
-            "Source: ", reference
+            "Reference: ", reference
           )
         ) %>%
         transmute(
@@ -747,7 +665,7 @@ server <- function(input, output, session) {
           dashes = direct_or_indirect == "Indirect",
           arrows = ifelse(bidirectional, "to;from", "to"),
           color = edge_color,
-          width = ifelse(effect == "Mixed / context-dependent", 1.4, 2.2)
+          width = ifelse(effect == "Mixed / context-dependent", 1.6, 2.3)
         )
     } else {
       plot_edges <- data.frame(
@@ -762,8 +680,8 @@ server <- function(input, output, session) {
       )
     }
 
-    visNetwork(plot_nodes, plot_edges, width = "100%", height = "650px") %>%
-      visNodes(borderWidth = 1.3, shadow = FALSE) %>%
+    visNetwork(plot_nodes, plot_edges, width = "100%", height = "680px") %>%
+      visNodes(borderWidth = 1.2, shadow = FALSE) %>%
       visEdges(smooth = FALSE) %>%
       visIgraphLayout(layout = "layout_with_fr") %>%
       visOptions(
@@ -775,20 +693,21 @@ server <- function(input, output, session) {
   })
 
   output$interaction_table <- renderDT({
-    tbl <- filtered_edges() %>%
+    tbl <- filtered_interactions() %>%
       transmute(
         `Edge ID` = edge_id,
-        `Interaction Family` = interaction_family,
+        Country = country,
         Theme = theme,
-        From = from_label,
-        To = to_label,
+        `Interaction Family` = interaction_family,
+        `From Objective` = paste0(from_short, " - ", from_label),
+        `To Objective` = paste0(to_short, " - ", to_label),
         Effect = effect,
         `Direct or Indirect` = direct_or_indirect,
         Bidirectional = ifelse(bidirectional, "Yes", "No"),
         `Context-Dependent` = ifelse(context_dependent, "Yes", "No"),
-        `Evidence Level` = evidence_level,
-        Mechanism = mechanism,
         `Policy Tension` = policy_tension,
+        `Interaction Summary` = interaction_summary,
+        `Evidence Level` = evidence_level,
         Reference = reference
       )
 
@@ -800,268 +719,48 @@ server <- function(input, output, session) {
     )
   })
 
-  output$reference_table <- renderDT({
-    tbl <- filtered_edges() %>%
-      group_by(reference) %>%
-      summarise(
-        `Interactions` = n(),
-        `Families` = paste(sort(unique(interaction_family)), collapse = "; "),
-        `Themes` = paste(sort(unique(theme)), collapse = "; "),
-        `Related Edge IDs` = paste(sort(unique(edge_id)), collapse = ", "),
-        .groups = "drop"
-      ) %>%
-      rename(`Reference Source` = reference)
+  output$country_summary_table <- renderDT({
+    tbl <- filtered_interactions() %>%
+      count(country, interaction_family, effect, theme, sort = TRUE) %>%
+      rename(
+        Country = country,
+        `Interaction Family` = interaction_family,
+        Effect = effect,
+        Theme = theme,
+        `Count` = n
+      )
 
     datatable(
       tbl,
       rownames = FALSE,
-      options = list(pageLength = 8, lengthChange = FALSE, scrollX = TRUE)
+      options = list(pageLength = 10, lengthMenu = c(10, 20, 50), scrollX = TRUE)
     )
   })
 
   output$download_filtered <- downloadHandler(
     filename = function() {
-      paste0("bridge_abr_filtered_interactions_", Sys.Date(), ".csv")
+      paste0("bridge_abr_policy_interactions_", Sys.Date(), ".csv")
     },
     content = function(file) {
-      out <- filtered_edges() %>%
+      out <- filtered_interactions() %>%
         transmute(
           edge_id,
+          country,
+          theme,
+          interaction_family,
           from,
+          from_short,
           from_label,
           to,
+          to_short,
           to_label,
-          interaction_family,
-          theme,
           effect,
           direct_or_indirect,
           bidirectional,
           context_dependent,
-          evidence_level,
-          mechanism,
           policy_tension,
-          reference
-        )
-      write_csv(out, file)
-    }
-  )
-
-  pathway_edges <- reactive({
-    target <- input$outcome_target
-    depth <- input$path_depth
-
-    if (is.null(target) || length(target) == 0) {
-      return(edges_enriched[0, ])
-    }
-
-    base_df <- edges_enriched %>%
-      filter(
-        theme %in% input$pathway_theme,
-        effect %in% input$pathway_effect
-      )
-
-    frontier <- target
-    all_edges <- base_df[0, ]
-
-    for (step in seq_len(depth)) {
-      step_edges <- base_df %>% filter(to %in% frontier)
-      if (nrow(step_edges) == 0) {
-        next
-      }
-      step_edges <- step_edges %>% mutate(path_step = step)
-      all_edges <- bind_rows(all_edges, step_edges)
-      frontier <- unique(step_edges$from)
-    }
-
-    all_edges %>% distinct(edge_id, .keep_all = TRUE)
-  })
-
-  output$pathway_network <- renderVisNetwork({
-    p_edges <- pathway_edges()
-    target <- input$outcome_target
-
-    if (nrow(p_edges) == 0 || is.null(target)) {
-      return(
-        visNetwork(
-          nodes = data.frame(id = character(), label = character()),
-          edges = data.frame(from = character(), to = character())
-        )
-      )
-    }
-
-    node_levels <- data.frame(id = target, level = 0)
-    frontier <- target
-
-    for (step in seq_len(input$path_depth)) {
-      candidates <- p_edges %>%
-        filter(to %in% frontier) %>%
-        pull(from) %>%
-        unique()
-
-      new_ids <- setdiff(candidates, node_levels$id)
-      if (length(new_ids) == 0) {
-        frontier <- candidates
-        next
-      }
-
-      node_levels <- bind_rows(node_levels, data.frame(id = new_ids, level = step))
-      frontier <- candidates
-    }
-
-    plot_nodes <- nodes %>%
-      filter(id %in% unique(c(p_edges$from, p_edges$to))) %>%
-      left_join(node_levels, by = "id") %>%
-      mutate(
-        level = ifelse(is.na(level), input$path_depth + 1, input$path_depth - level),
-        label_plot = short_label,
-        title = paste0(
-          "<b>", label, "</b><br>",
-          "Type: ", node_type, "<br>",
-          "Theme: ", theme
-        ),
-        shape = shape_by_type(node_type, domain),
-        color.background = ifelse(id == target, "#b45309", domain_palette[domain]),
-        color.border = ifelse(id == target, "#78350f", "#1f2937"),
-        size = ifelse(id == target, 38, 24)
-      )
-    plot_nodes$color <- I(Map(
-      function(background, border) list(background = background, border = border),
-      plot_nodes$color.background,
-      plot_nodes$color.border
-    ))
-    plot_nodes <- plot_nodes %>%
-      transmute(
-        id,
-        label = label_plot,
-        title,
-        level,
-        shape,
-        color,
-        size
-      )
-
-    plot_edges <- p_edges %>%
-      mutate(
-        edge_color = effect_palette[effect],
-        edge_title = paste0(
-          "<b>", from_label, " -> ", to_label, "</b><br>",
-          "Path step: ", path_step, "<br>",
-          "Effect: ", effect, "<br>",
-          "Theme: ", theme, "<br>",
-          "Mechanism: ", mechanism
-        )
-      ) %>%
-      transmute(
-        from,
-        to,
-        title = edge_title,
-        dashes = direct_or_indirect == "Indirect",
-        arrows = ifelse(bidirectional, "to;from", "to"),
-        color = edge_color,
-        width = ifelse(effect == "Mixed / context-dependent", 1.4, 2.1)
-      )
-
-    visNetwork(plot_nodes, plot_edges, width = "100%", height = "620px") %>%
-      visNodes(borderWidth = 1.2) %>%
-      visEdges(smooth = FALSE) %>%
-      visHierarchicalLayout(
-        direction = "LR",
-        sortMethod = "directed",
-        levelSeparation = 130,
-        nodeSpacing = 130
-      ) %>%
-      visInteraction(hover = TRUE, navigationButtons = TRUE) %>%
-      visPhysics(enabled = FALSE)
-  })
-
-  output$pathway_summary <- renderUI({
-    p_edges <- pathway_edges()
-    target <- input$outcome_target
-
-    if (nrow(p_edges) == 0 || is.null(target)) {
-      return(tags$div(class = "pathway-summary", "No pathways available under current filters."))
-    }
-
-    target_label <- nodes %>% filter(id == target) %>% pull(label)
-
-    top_drivers <- p_edges %>%
-      count(from_label, sort = TRUE) %>%
-      slice_head(n = 5)
-
-    top_themes <- p_edges %>%
-      count(theme, sort = TRUE) %>%
-      slice_head(n = 3)
-
-    tags$div(
-      class = "pathway-summary",
-      tags$p(
-        strong("Selected outcome:"),
-        paste(target_label)
-      ),
-      tags$p(
-        strong("Pathway size:"),
-        paste0(nrow(p_edges), " links across ", length(unique(c(p_edges$from, p_edges$to))), " nodes")
-      ),
-      tags$p(
-        strong("Most frequent upstream nodes:"),
-        paste(paste0(top_drivers$from_label, " (", top_drivers$n, ")"), collapse = "; ")
-      ),
-      tags$p(
-        strong("Dominant themes:"),
-        paste(paste0(top_themes$theme, " (", top_themes$n, ")"), collapse = "; ")
-      )
-    )
-  })
-
-  output$pathway_table <- renderDT({
-    tbl <- pathway_edges() %>%
-      arrange(path_step, from_label, to_label) %>%
-      transmute(
-        `Path Step` = path_step,
-        `Edge ID` = edge_id,
-        `Interaction Family` = interaction_family,
-        Theme = theme,
-        From = from_label,
-        To = to_label,
-        Effect = effect,
-        `Direct or Indirect` = direct_or_indirect,
-        `Evidence Level` = evidence_level,
-        Mechanism = mechanism,
-        `Policy Tension` = policy_tension,
-        Reference = reference
-      )
-
-    datatable(
-      tbl,
-      rownames = FALSE,
-      options = list(pageLength = 12, lengthMenu = c(12, 25, 50), scrollX = TRUE)
-    )
-  })
-
-  output$download_pathway <- downloadHandler(
-    filename = function() {
-      target_label <- nodes %>% filter(id == input$outcome_target) %>% pull(short_label)
-      target_label <- ifelse(length(target_label) == 0, "outcome", target_label)
-      paste0("bridge_abr_pathway_", gsub("[^A-Za-z0-9]", "_", target_label), "_", Sys.Date(), ".csv")
-    },
-    content = function(file) {
-      out <- pathway_edges() %>%
-        transmute(
-          path_step,
-          edge_id,
-          from,
-          from_label,
-          to,
-          to_label,
-          interaction_family,
-          theme,
-          effect,
-          direct_or_indirect,
-          bidirectional,
-          context_dependent,
+          interaction_summary,
           evidence_level,
-          mechanism,
-          policy_tension,
           reference
         )
       write_csv(out, file)
@@ -1072,11 +771,11 @@ server <- function(input, output, session) {
     tbl <- nodes %>%
       transmute(
         `Node ID` = id,
-        Label = label,
-        `Short Label` = short_label,
+        `Objective Code` = short_label,
+        `Objective Label` = label,
+        `Node Group` = node_group,
         `Node Type` = node_type,
-        Domain = domain,
-        Theme = theme,
+        Framework = source_framework,
         Description = description
       )
 
@@ -1088,19 +787,19 @@ server <- function(input, output, session) {
   })
 
   output$summary_table <- renderDT({
-    tbl <- edges_enriched %>%
-      count(interaction_family, theme, effect, sort = TRUE) %>%
+    tbl <- interactions_enriched %>%
+      count(country, interaction_family, effect, sort = TRUE) %>%
       rename(
+        Country = country,
         `Interaction Family` = interaction_family,
-        Theme = theme,
         Effect = effect,
-        `Number of Links` = n
+        `Number of Interactions` = n
       )
 
     datatable(
       tbl,
       rownames = FALSE,
-      options = list(pageLength = 12, lengthChange = FALSE, scrollX = TRUE)
+      options = list(pageLength = 12, lengthMenu = c(12, 25, 50), scrollX = TRUE)
     )
   })
 }
