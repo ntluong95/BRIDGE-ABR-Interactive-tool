@@ -1,31 +1,42 @@
-# BRIDGE-ABR Policy Tension Explorer
+# Policy Tension Explorer
 
-This app visualizes **policy-objective interactions only** at National Action Plan level:
+A modern Shiny dashboard for visualizing National Action Plan interactions between:
 
 - `AMR-AMR`
 - `SDG-SDG`
 - `AMR-SDG`
 
-It does **not** model AMR outcomes in this version.
+with effect categories:
 
-## Objective model
+- `Synergy (co-benefit)`
+- `Tension (trade-off)`
+- `Mixed / context-dependent`
 
-- AMR side: **5 WHO Global Action Plan objectives** (`AMR-01` to `AMR-05`)
-- SDG side: **17 UN SDG goals** (`SDG-01` to `SDG-17`)
+## Scope model
 
-## Included example
+- AMR nodes: 5 WHO GAP objectives (`AMR-01` to `AMR-05`)
+- SDG nodes: 17 UN SDGs (`SDG-01` to `SDG-17`)
+- Interaction record level: country + theme + evidence metadata
 
-The sample dataset includes the requested structure, including cases like:
-
-- `AMR-03` and `SDG-08` in `Country XXX`
-- Theme: `Agriculture & Food Systems`
-
-## Files
+## App structure
 
 - `/Users/luongnguyen/Library/CloudStorage/OneDrive-SharedLibraries-Uppsalauniversitet/ReAct - BRIDGE ABR project/03 Workshop/BRIDGE-ABR Interactive tool/app.R`
+- `/Users/luongnguyen/Library/CloudStorage/OneDrive-SharedLibraries-Uppsalauniversitet/ReAct - BRIDGE ABR project/03 Workshop/BRIDGE-ABR Interactive tool/www/styles.css`
+- `/Users/luongnguyen/Library/CloudStorage/OneDrive-SharedLibraries-Uppsalauniversitet/ReAct - BRIDGE ABR project/03 Workshop/BRIDGE-ABR Interactive tool/www/logo-bridge-abr.svg`
 - `/Users/luongnguyen/Library/CloudStorage/OneDrive-SharedLibraries-Uppsalauniversitet/ReAct - BRIDGE ABR project/03 Workshop/BRIDGE-ABR Interactive tool/data/policy_nodes.csv`
 - `/Users/luongnguyen/Library/CloudStorage/OneDrive-SharedLibraries-Uppsalauniversitet/ReAct - BRIDGE ABR project/03 Workshop/BRIDGE-ABR Interactive tool/data/policy_interactions.csv`
-- `/Users/luongnguyen/Library/CloudStorage/OneDrive-SharedLibraries-Uppsalauniversitet/ReAct - BRIDGE ABR project/03 Workshop/BRIDGE-ABR Interactive tool/www/logo-bridge-abr.svg`
+
+## UI redesign highlights
+
+- Sticky modern navbar with branded logo and multi-tab navigation
+- Dashboard two-panel layout with collapsible filter sidebar
+- Accordion-based filters with searchable multi-select pickers
+- Apply-filter workflow with clear-filters action
+- KPI metrics strip (Synergy, Trade-off, Mixed, Total)
+- Redesigned network card with SDG palette coloring and AMR diamond nodes
+- Animated right-side node details drawer on node click
+- Horizontal pill-based legend
+- Loader animations and responsive mobile behavior
 
 ## Data schema
 
@@ -48,10 +59,10 @@ Required columns:
 - `edge_id`
 - `from`
 - `to`
-- `interaction_family` (`AMR-AMR`, `SDG-SDG`, `AMR-SDG`)
+- `interaction_family`
 - `country`
 - `theme`
-- `effect` (`Tension (trade-off)`, `Synergy (co-benefit)`, `Mixed / context-dependent`)
+- `effect`
 - `direct_or_indirect`
 - `bidirectional`
 - `context_dependent`
@@ -60,19 +71,13 @@ Required columns:
 - `evidence_level`
 - `reference`
 
-## Features
-
-- Branded navbar with logo
-- Network visualization of policy objective interactions
-- Filters by family, country, theme, effect, evidence level, and objective focus
-- Search on policy tension and references
-- Filtered interaction table and country summary table
-- CSV export of current filtered view
-
 ## R package requirements
 
 ```r
-install.packages(c("shiny", "dplyr", "readr", "stringr", "DT", "visNetwork"))
+install.packages(c(
+  "shiny", "dplyr", "readr", "stringr", "DT", "visNetwork",
+  "bslib", "bsicons", "shinyWidgets", "shinycssloaders"
+))
 ```
 
 ## Run
