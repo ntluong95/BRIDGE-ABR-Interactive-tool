@@ -207,6 +207,60 @@ effect_palette <- c(
   "Mixed / context-dependent" = "#F9A825"
 )
 
+build_sdg_logo_map <- function(www_dir = "www") {
+  logo_files <- list.files(
+    www_dir,
+    pattern = "(?i)\\.(png|svg|jpg|jpeg|webp)$"
+  )
+
+  if (length(logo_files) == 0) {
+    return(stats::setNames(character(), character()))
+  }
+
+  logo_num <- stringr::str_match(
+    logo_files,
+    "(?i)(?:sdg|goal)[^0-9]*([0-9]{1,2})"
+  )[, 2]
+  logo_num <- suppressWarnings(as.integer(logo_num))
+  valid <- !is.na(logo_num) & logo_num >= 1 & logo_num <= 17
+
+  if (!any(valid)) {
+    return(stats::setNames(character(), character()))
+  }
+
+  logo_df <- data.frame(
+    file = logo_files[valid],
+    num = logo_num[valid],
+    stringsAsFactors = FALSE
+  )
+  ext <- tolower(tools::file_ext(logo_df$file))
+  logo_df$ext_rank <- dplyr::case_when(
+    ext == "svg" ~ 1L,
+    ext == "png" ~ 2L,
+    ext %in% c("jpg", "jpeg") ~ 3L,
+    ext == "webp" ~ 4L,
+    TRUE ~ 5L
+  )
+  logo_df$file_len <- nchar(logo_df$file)
+  logo_df <- logo_df[order(logo_df$num, logo_df$ext_rank, logo_df$file_len, logo_df$file), ]
+  logo_df <- logo_df[!duplicated(logo_df$num), , drop = FALSE]
+
+  logo_id <- sprintf("sdg%02d", logo_df$num)
+  stats::setNames(logo_df$file, logo_id)
+}
+
+sdg_logo_map <- build_sdg_logo_map("www")
+missing_sdg_logo <- setdiff(sprintf("sdg%02d", 1:17), names(sdg_logo_map))
+if (length(missing_sdg_logo) > 0) {
+  warning(
+    paste(
+      "SDG logo files not found for:",
+      paste(missing_sdg_logo, collapse = ", ")
+    ),
+    call. = FALSE
+  )
+}
+
 partner_links <- list(
   uu = "https://www.uu.se/en",
   react = "https://www.reactgroup.org/",
@@ -919,7 +973,13 @@ server <- function(input, output, session) {
           mutate(
             is_sdg = node_group == "SDG",
             sdg_number = str_extract(short_label, "[0-9]{2}$"),
-            label_plot = ifelse(is_sdg, sdg_number, short_label),
+            sdg_logo = unname(sdg_logo_map[id]),
+            has_sdg_logo = is_sdg & !is.na(sdg_logo) & nzchar(sdg_logo),
+            label_plot = ifelse(
+              has_sdg_logo,
+              "",
+              ifelse(is_sdg, sdg_number, short_label)
+            ),
             title = paste0(
               "<b>",
               short_label,
@@ -949,13 +1009,18 @@ server <- function(input, output, session) {
               ifelse(active, "#334155", "#A8B4C3")
             ),
             font.color = ifelse(active, "#FFFFFF", "#6B7280"),
-            shape = ifelse(node_group == "AMR", "circle", "square"),
+            shape = case_when(
+              node_group == "AMR" ~ "circle",
+              has_sdg_logo ~ "image",
+              TRUE ~ "square"
+            ),
+            image = ifelse(has_sdg_logo, sdg_logo, NA_character_),
             size = case_when(
-              is_selected ~ ifelse(node_group == "AMR", 46, 42),
-              node_group == "AMR" & active ~ 40,
-              node_group == "AMR" ~ 34,
-              active ~ 30,
-              TRUE ~ 28
+              is_selected ~ ifelse(node_group == "AMR", 49, 45),
+              node_group == "AMR" & active ~ 43,
+              node_group == "AMR" ~ 37,
+              active ~ 33,
+              TRUE ~ 31
             )
           ) %>%
           transmute(
@@ -964,6 +1029,7 @@ server <- function(input, output, session) {
             title,
             group = node_group,
             shape,
+            image,
             size,
             color.background,
             color.border,
@@ -1061,8 +1127,21 @@ server <- function(input, output, session) {
         visNetwork(plot_nodes, plot_edges, width = "100%", height = "620px") %>%
           visNodes(
             borderWidth = 1.2,
+            borderWidthSelected = 2.4,
             shadow = list(enabled = TRUE, size = 8, x = 1, y = 2),
-            font = list(face = "Inter", size = 14)
+            font = list(face = "Inter", size = 14),
+            shapeProperties = list(useImageSize = FALSE, useBorderWithImage = TRUE),
+            chosen = list(
+              label = htmlwidgets::JS(
+                "function(values, id, selected, hovering) {
+                  if (hovering) {
+                    values.color = '#111827';
+                    values.strokeColor = 'rgba(255, 255, 255, 0.92)';
+                    values.strokeWidth = 5;
+                  }
+                }"
+              )
+            )
           ) %>%
           visEdges(
             smooth = list(enabled = TRUE, type = "dynamic", roundness = 0.25)
