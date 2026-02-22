@@ -181,23 +181,23 @@ objective_choices <- setNames(
 )
 
 sdg_palette <- c(
-  "sdg01" = "#E5243B",
-  "sdg02" = "#DDA63A",
-  "sdg03" = "#4C9F38",
-  "sdg04" = "#C5192D",
-  "sdg05" = "#FF3A21",
-  "sdg06" = "#26BDE2",
-  "sdg07" = "#FCC30B",
-  "sdg08" = "#A21942",
-  "sdg09" = "#FD6925",
-  "sdg10" = "#DD1367",
-  "sdg11" = "#FD9D24",
-  "sdg12" = "#BF8B2E",
-  "sdg13" = "#3F7E44",
-  "sdg14" = "#0A97D9",
-  "sdg15" = "#56C02B",
-  "sdg16" = "#00689D",
-  "sdg17" = "#19486A"
+  "SDG-01" = "#E5243B",
+  "SDG-02" = "#DDA63A",
+  "SDG-03" = "#4C9F38",
+  "SDG-04" = "#C5192D",
+  "SDG-05" = "#FF3A21",
+  "SDG-06" = "#26BDE2",
+  "SDG-07" = "#FCC30B",
+  "SDG-08" = "#A21942",
+  "SDG-09" = "#FD6925",
+  "SDG-10" = "#DD1367",
+  "SDG-11" = "#FD9D24",
+  "SDG-12" = "#BF8B2E",
+  "SDG-13" = "#3F7E44",
+  "SDG-14" = "#0A97D9",
+  "SDG-15" = "#56C02B",
+  "SDG-16" = "#00689D",
+  "SDG-17" = "#19486A"
 )
 
 amr_color <- "#0F766E"
@@ -242,7 +242,9 @@ build_sdg_logo_map <- function(www_dir = "www") {
     TRUE ~ 5L
   )
   logo_df$file_len <- nchar(logo_df$file)
-  logo_df <- logo_df[order(logo_df$num, logo_df$ext_rank, logo_df$file_len, logo_df$file), ]
+  logo_df <- logo_df[
+    order(logo_df$num, logo_df$ext_rank, logo_df$file_len, logo_df$file),
+  ]
   logo_df <- logo_df[!duplicated(logo_df$num), , drop = FALSE]
 
   logo_id <- sprintf("sdg%02d", logo_df$num)
@@ -968,18 +970,28 @@ server <- function(input, output, session) {
         } else {
           selected_id
         }
+        selected_id_dropdown <- if (
+          !is.null(selected_id) && selected_id %in% nodes$id
+        ) {
+          selected_id
+        } else {
+          NULL
+        }
+        nodes_id_selection_opts <- list(
+          enabled = TRUE,
+          useLabels = TRUE,
+          main = "Focus objective"
+        )
+        if (!is.null(selected_id_dropdown) && nzchar(selected_id_dropdown)) {
+          nodes_id_selection_opts$selected <- selected_id_dropdown
+        }
 
         plot_nodes <- nodes %>%
           mutate(
             is_sdg = node_group == "SDG",
-            sdg_number = str_extract(short_label, "[0-9]{2}$"),
             sdg_logo = unname(sdg_logo_map[id]),
             has_sdg_logo = is_sdg & !is.na(sdg_logo) & nzchar(sdg_logo),
-            label_plot = ifelse(
-              has_sdg_logo,
-              "",
-              ifelse(is_sdg, sdg_number, short_label)
-            ),
+            label_plot = short_label,
             title = paste0(
               "<b>",
               short_label,
@@ -1008,7 +1020,11 @@ server <- function(input, output, session) {
               "#A4343A",
               ifelse(active, "#334155", "#A8B4C3")
             ),
-            font.color = ifelse(active, "#FFFFFF", "#6B7280"),
+            font.color = case_when(
+              has_sdg_logo ~ "rgba(0,0,0,0)",
+              active ~ "#FFFFFF",
+              TRUE ~ "#6B7280"
+            ),
             shape = case_when(
               node_group == "AMR" ~ "circle",
               has_sdg_logo ~ "image",
@@ -1130,7 +1146,10 @@ server <- function(input, output, session) {
             borderWidthSelected = 2.4,
             shadow = list(enabled = TRUE, size = 8, x = 1, y = 2),
             font = list(face = "Inter", size = 14),
-            shapeProperties = list(useImageSize = FALSE, useBorderWithImage = TRUE),
+            shapeProperties = list(
+              useImageSize = FALSE,
+              useBorderWithImage = TRUE
+            ),
             chosen = list(
               label = htmlwidgets::JS(
                 "function(values, id, selected, hovering) {
@@ -1147,7 +1166,10 @@ server <- function(input, output, session) {
             smooth = list(enabled = TRUE, type = "dynamic", roundness = 0.25)
           ) %>%
           visLayout(randomSeed = 42, improvedLayout = TRUE) %>%
-          visOptions(highlightNearest = list(enabled = TRUE, hover = TRUE)) %>%
+          visOptions(
+            highlightNearest = list(enabled = TRUE, hover = TRUE),
+            nodesIdSelection = nodes_id_selection_opts
+          ) %>%
           visInteraction(
             hover = TRUE,
             navigationButtons = TRUE,
