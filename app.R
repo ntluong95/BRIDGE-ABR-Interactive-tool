@@ -1,47 +1,16 @@
-required_packages <- c(
-  "shiny",
-  "dplyr",
-  "readr",
-  "stringr",
-  "DT",
-  "visNetwork",
-  "bslib",
-  "bsicons",
-  "shinyWidgets",
-  "shinycssloaders"
+pacman::p_load(
+  shiny,
+  dplyr,
+  readr,
+  stringr,
+  DT,
+  visNetwork,
+  bslib,
+  bsicons,
+  shinyWidgets,
+  shinycssloaders
 )
-missing_packages <- required_packages[
-  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
-]
 
-if (length(missing_packages) > 0) {
-  install_cmd <- paste0(
-    "install.packages(c(\"",
-    paste(missing_packages, collapse = "\", \""),
-    "\"))"
-  )
-  stop(
-    paste0(
-      "Missing required packages: ",
-      paste(missing_packages, collapse = ", "),
-      ". Install them with ",
-      install_cmd
-    )
-  )
-}
-
-suppressPackageStartupMessages({
-  library(shiny)
-  library(dplyr)
-  library(readr)
-  library(stringr)
-  library(DT)
-  library(visNetwork)
-  library(bslib)
-  library(bsicons)
-  library(shinyWidgets)
-  library(shinycssloaders)
-})
 
 data_dir <- "data"
 nodes_path <- file.path(data_dir, "policy_nodes.csv")
@@ -364,11 +333,11 @@ ui <- page_navbar(
           accordion(
             id = "filter_accordion",
             multiple = TRUE,
-            open = c("Families"),
+            open = c("Types"),
 
             accordion_panel(
-              title = filter_title("diagram-3", "Interaction families"),
-              value = "Families",
+              title = filter_title("diagram-3", "Interaction Types"),
+              value = "Types",
               pickerInput(
                 "family_filter",
                 label = NULL,
@@ -450,7 +419,7 @@ ui <- page_navbar(
               ),
               pickerInput(
                 "focus_nodes",
-                label = "Focus objectives",
+                label = "All policies",
                 choices = objective_choices,
                 selected = character(0),
                 multiple = TRUE,
@@ -872,7 +841,7 @@ server <- function(input, output, session) {
         tags$strong("Countries:"),
         paste(country_label),
         tags$span(" | "),
-        tags$strong("Families:"),
+        tags$strong("Types:"),
         paste(family_label)
       )
     )
@@ -1331,7 +1300,7 @@ server <- function(input, output, session) {
         `Edge ID` = edge_id,
         Country = country,
         Theme = theme,
-        `Interaction Family` = interaction_family,
+        `Interaction Type` = interaction_family,
         `From Objective` = paste0(from_short, " - ", from_label),
         `To Objective` = paste0(to_short, " - ", to_label),
         Effect = effect,
@@ -1362,7 +1331,7 @@ server <- function(input, output, session) {
       count(country, interaction_family, effect, theme, sort = TRUE) %>%
       rename(
         Country = country,
-        `Interaction Family` = interaction_family,
+        `Interaction Type` = interaction_family,
         Effect = effect,
         Theme = theme,
         Count = n
@@ -1403,7 +1372,7 @@ server <- function(input, output, session) {
       count(country, interaction_family, effect, sort = TRUE) %>%
       rename(
         Country = country,
-        `Interaction Family` = interaction_family,
+        `Interaction Type` = interaction_family,
         Effect = effect,
         `Number of Interactions` = n
       )
