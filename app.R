@@ -200,7 +200,7 @@ sdg_palette <- c(
   "SDG-17" = "#19486A"
 )
 
-amr_color <- "#0F766E"
+amr_color <- "#031816"
 effect_palette <- c(
   "Tension (trade-off)" = "#C62828",
   "Synergy (co-benefit)" = "#2E7D32",
@@ -568,51 +568,6 @@ ui <- page_navbar(
           DTOutput("summary_table"),
           type = 4,
           color = "#A4343A"
-        )
-      )
-    )
-  ),
-
-  nav_panel(
-    span(class = "download-tab-label", "Download Data"),
-    div(
-      class = "page-wrap",
-      layout_columns(
-        col_widths = c(6, 6),
-
-        div(
-          class = "data-card",
-          h4("Current filtered dataset"),
-          p(
-            "Download the interactions currently visible under applied filters."
-          ),
-          downloadButton(
-            "download_filtered_tab",
-            "Download filtered interactions",
-            class = "btn btn-primary"
-          )
-        ),
-
-        div(
-          class = "data-card",
-          h4("Full interaction dataset"),
-          p("Download all policy interaction records in the app."),
-          downloadButton(
-            "download_all_interactions",
-            "Download all interactions",
-            class = "btn btn-primary"
-          )
-        ),
-
-        div(
-          class = "data-card",
-          h4("Objective dictionary"),
-          p("Download the 5 AMR objectives and 17 SDG goals dictionary."),
-          downloadButton(
-            "download_all_nodes",
-            "Download objective dictionary",
-            class = "btn btn-outline-primary"
-          )
         )
       )
     )
