@@ -160,6 +160,31 @@ effect_palette <- c(
   "Mixed / context-dependent" = "#F9A825"
 )
 
+partner_links <- list(
+  uu = "https://www.uu.se/en",
+  react = "https://www.reactgroup.org/",
+  src = "https://www.stockholmresilience.org/"
+)
+
+project_description_text <- paste(
+  "The BRIDGE-ABR project is part of the Uppsala University Conflicting Objectives Nexus (UUniCORN).",
+  "Led by ReAct Europe in collaboration with the Stockholm Resilience Centre,",
+  "the project systematically maps and analyzes synergies and trade-offs between",
+  "antibiotic resistance (ABR) mitigation objectives and the Sustainable Development Goals (SDGs).",
+  "It also aims to strengthen the research-to-policy interface and support the development of",
+  "integrated, context-appropriate solutions, with a particular focus on low- and middle-income countries (LMICs)."
+)
+
+partner_logo <- function(src, alt, href, image_class = "partner-logo-img") {
+  tags$a(
+    href = href,
+    target = "_blank",
+    rel = "noopener noreferrer",
+    class = "partner-logo-link",
+    tags$img(src = src, alt = alt, class = image_class)
+  )
+}
+
 metric_card <- function(output_id, label, class_name = "") {
   div(
     class = paste("metric-card", class_name),
@@ -432,31 +457,6 @@ ui <- page_navbar(
   ),
 
   nav_panel(
-    "About",
-    div(
-      class = "page-wrap",
-      div(
-        class = "data-card",
-        h3("About this tool"),
-        p(
-          "Policy Tension Explorer supports analysis of policy-level interactions",
-          "between AMR objectives and SDGs at national action plan level."
-        ),
-        tags$ul(
-          tags$li("Interaction families in scope: AMR-AMR, SDG-SDG, AMR-SDG"),
-          tags$li("AMR nodes: WHO GAP objectives AMR-01 to AMR-05"),
-          tags$li("SDG nodes: UN SDG goals SDG-01 to SDG-17"),
-          tags$li("Each interaction record is tagged by country and policy theme")
-        ),
-        p(
-          "Use this platform to surface synergies, trade-offs, and context-dependent",
-          "policy dynamics for deliberation and evidence-informed policy design."
-        )
-      )
-    )
-  ),
-
-  nav_panel(
     span(class = "download-tab-label", "Download Data"),
     div(
       class = "page-wrap",
@@ -485,12 +485,68 @@ ui <- page_navbar(
         )
       )
     )
+  ),
+
+  nav_spacer(),
+  nav_item(
+    div(
+      class = "navbar-actions",
+      actionButton(
+        "open_project_about",
+        label = "About the project",
+        icon = bs_icon("info-circle"),
+        class = "about-trigger-btn",
+        style = paste(
+          "--bs-btn-color:#F5F7FA !important;",
+          "--bs-btn-bg:#7F2A2F !important;",
+          "--bs-btn-border-color:#7F2A2F !important;",
+          "--bs-btn-hover-color:#F5F7FA !important;",
+          "--bs-btn-hover-bg:#7F2A2F !important;",
+          "--bs-btn-hover-border-color:#7F2A2F !important;",
+          "--bs-btn-active-color:#F5F7FA !important;",
+          "--bs-btn-active-bg:#7F2A2F !important;",
+          "--bs-btn-active-border-color:#7F2A2F !important;",
+          "color:#F5F7FA !important;",
+          "background-color:#7F2A2F !important;",
+          "border-color:#7F2A2F !important;"
+        )
+      )
+    )
   )
 )
 
 server <- function(input, output, session) {
   format_count <- function(x) {
     format(x, big.mark = ",", scientific = FALSE, trim = TRUE)
+  }
+
+  normalize_node_selection <- function(value) {
+    if (is.null(value) || length(value) == 0) {
+      return(NULL)
+    }
+
+    parsed <- value
+    if (is.list(parsed)) {
+      if (!is.null(parsed$id)) {
+        parsed <- parsed$id
+      } else if (!is.null(parsed$nodes) && length(parsed$nodes) > 0) {
+        parsed <- parsed$nodes[[1]]
+      } else {
+        parsed <- unlist(parsed, recursive = TRUE, use.names = FALSE)
+      }
+    }
+
+    parsed <- as.character(parsed[[1]])
+    if (is.na(parsed)) {
+      return(NULL)
+    }
+
+    parsed <- str_squish(parsed)
+    if (!nzchar(parsed)) {
+      return(NULL)
+    }
+
+    parsed
   }
 
   compact_selection <- function(values, all_values, limit = 3) {
@@ -532,8 +588,34 @@ server <- function(input, output, session) {
 
   selected_node <- reactiveVal(NULL)
 
+  observeEvent(input$open_project_about, {
+    showModal(
+      modalDialog(
+        class = "project-modal",
+        size = "l",
+        easyClose = TRUE,
+        title = div(
+          class = "project-modal-title",
+          bs_icon("info-circle"),
+          span("About BRIDGE-ABR")
+        ),
+        div(
+          class = "project-modal-body",
+          p(class = "project-description", project_description_text),
+          div(
+            class = "modal-logo-row",
+            partner_logo("uu_logo.png", "Uppsala University logo", partner_links$uu, "modal-logo-img"),
+            partner_logo("react_logo.png", "ReAct Europe logo", partner_links$react, "modal-logo-img"),
+            partner_logo("src_logo.png", "Stockholm Resilience Centre logo", partner_links$src, "modal-logo-img")
+          )
+        ),
+        footer = modalButton("Close")
+      )
+    )
+  })
+
   observeEvent(input$network_node_selected, {
-    selected_node(input$network_node_selected)
+    selected_node(normalize_node_selection(input$network_node_selected))
   })
 
   observeEvent(input$clear_selected_node, {
@@ -671,8 +753,11 @@ server <- function(input, output, session) {
   })
 
   edge_color_with_alpha <- function(effect_vec, mode_vec) {
-    base_cols <- unname(effect_palette[effect_vec])
-    alphas <- ifelse(mode_vec == "Indirect", 0.4, 0.9)
+    effect_norm <- ifelse(is.na(effect_vec), "Mixed / context-dependent", effect_vec)
+    mode_norm <- ifelse(is.na(mode_vec), "Direct", mode_vec)
+    base_cols <- unname(effect_palette[effect_norm])
+    base_cols[is.na(base_cols)] <- "#94A3B8"
+    alphas <- ifelse(mode_norm == "Indirect", 0.4, 0.9)
     mapply(
       function(col, alpha_val) grDevices::adjustcolor(col, alpha.f = alpha_val),
       base_cols,
@@ -682,125 +767,133 @@ server <- function(input, output, session) {
   }
 
   output$interaction_network <- renderVisNetwork({
-    df <- filtered_interactions()
-    active_nodes <- unique(c(df$from, df$to, applied_filters$focus_nodes))
-    selected_id <- selected_node()
-    selected_id_safe <- if (is.null(selected_id) || length(selected_id) == 0) "__none__" else selected_id
+    net <- tryCatch({
+      df <- filtered_interactions()
+      active_nodes <- unique(c(df$from, df$to, applied_filters$focus_nodes))
+      selected_id <- normalize_node_selection(selected_node())
+      selected_id_safe <- if (is.null(selected_id)) "__none__" else selected_id
 
-    plot_nodes <- nodes %>%
-      mutate(
-        is_sdg = node_group == "SDG",
-        sdg_number = str_extract(short_label, "[0-9]{2}$"),
-        label_plot = ifelse(is_sdg, sdg_number, short_label),
-        title = paste0(
-          "<b>", short_label, "</b><br>",
-          label, "<br>",
-          "Group: ", node_group, "<br>",
-          "Framework: ", source_framework, "<br>",
-          description
-        ),
-        active = id %in% active_nodes,
-        is_selected = id == selected_id_safe,
-        base_bg = ifelse(is_sdg, sdg_palette[id], amr_color),
-        color.background = ifelse(active, base_bg, "#DDE4ED"),
-        color.border = ifelse(is_selected, "#A4343A", ifelse(active, "#334155", "#A8B4C3")),
-        font.color = ifelse(active, "#FFFFFF", "#6B7280"),
-        shape = ifelse(node_group == "AMR", "diamond", "box"),
-        size = case_when(
-          is_selected ~ ifelse(node_group == "AMR", 46, 36),
-          node_group == "AMR" & active ~ 40,
-          node_group == "AMR" ~ 34,
-          active ~ 30,
-          TRUE ~ 24
-        )
-      )
-
-    plot_nodes$color <- I(Map(
-      function(background, border) list(background = background, border = border),
-      plot_nodes$color.background,
-      plot_nodes$color.border
-    ))
-    plot_nodes$font <- I(lapply(
-      plot_nodes$font.color,
-      function(col) list(color = col, face = "Inter", size = 14, vadjust = 0)
-    ))
-
-    plot_nodes <- plot_nodes %>%
-      transmute(
-        id,
-        label = label_plot,
-        title,
-        group = node_group,
-        shape,
-        color,
-        font,
-        size
-      )
-
-    if (nrow(df) > 0) {
-      plot_edges <- df %>%
+      plot_nodes <- nodes %>%
         mutate(
-          edge_color = edge_color_with_alpha(effect, direct_or_indirect),
-          dashes = case_when(
-            effect == "Mixed / context-dependent" ~ TRUE,
-            direct_or_indirect == "Indirect" ~ TRUE,
-            TRUE ~ FALSE
+          is_sdg = node_group == "SDG",
+          sdg_number = str_extract(short_label, "[0-9]{2}$"),
+          label_plot = ifelse(is_sdg, sdg_number, short_label),
+          title = paste0(
+            "<b>", short_label, "</b><br>",
+            label, "<br>",
+            "Group: ", node_group, "<br>",
+            "Framework: ", source_framework, "<br>",
+            description
           ),
-          base_width = case_when(
-            effect == "Tension (trade-off)" ~ 3.2,
-            effect == "Synergy (co-benefit)" ~ 2.6,
-            TRUE ~ 2.0
-          ),
-          width = ifelse(direct_or_indirect == "Indirect", pmax(1.2, base_width - 1.0), base_width),
-          edge_title = paste0(
-            "<b>", from_short, " -> ", to_short, "</b><br>",
-            "Country: ", country, "<br>",
-            "Theme: ", theme, "<br>",
-            "Family: ", interaction_family, "<br>",
-            "Effect: ", effect, "<br>",
-            "Policy tension: ", policy_tension, "<br>",
-            "Summary: ", interaction_summary, "<br>",
-            "Evidence: ", evidence_level, "<br>",
-            "Reference: ", reference
+          active = id %in% active_nodes,
+          is_selected = id == selected_id_safe,
+          sdg_bg = unname(sdg_palette[id]),
+          base_bg = ifelse(is_sdg, ifelse(is.na(sdg_bg), "#334155", sdg_bg), amr_color),
+          color.background = ifelse(active, base_bg, "#DDE4ED"),
+          color.border = ifelse(is_selected, "#A4343A", ifelse(active, "#334155", "#A8B4C3")),
+          font.color = ifelse(active, "#FFFFFF", "#6B7280"),
+          shape = ifelse(node_group == "AMR", "diamond", "box"),
+          size = case_when(
+            is_selected ~ ifelse(node_group == "AMR", 46, 36),
+            node_group == "AMR" & active ~ 40,
+            node_group == "AMR" ~ 34,
+            active ~ 30,
+            TRUE ~ 24
           )
         ) %>%
         transmute(
-          id = edge_id,
-          from,
-          to,
-          title = edge_title,
-          dashes,
-          arrows = ifelse(bidirectional, "to;from", "to"),
-          color = edge_color,
-          width
+          id,
+          label = label_plot,
+          title,
+          group = node_group,
+          shape,
+          size,
+          color.background,
+          color.border,
+          font.color
         )
-    } else {
-      plot_edges <- data.frame(
-        id = character(),
-        from = character(),
-        to = character(),
-        title = character(),
-        dashes = logical(),
-        arrows = character(),
-        color = character(),
-        width = numeric()
-      )
+
+      if (nrow(df) > 0) {
+        plot_edges <- df %>%
+          mutate(
+            effect_safe = ifelse(is.na(effect), "Mixed / context-dependent", effect),
+            direct_or_indirect_safe = ifelse(is.na(direct_or_indirect), "Direct", direct_or_indirect)
+          ) %>%
+          mutate(
+            edge_color = edge_color_with_alpha(effect_safe, direct_or_indirect_safe),
+            dashes = case_when(
+              effect_safe == "Mixed / context-dependent" ~ TRUE,
+              direct_or_indirect_safe == "Indirect" ~ TRUE,
+              TRUE ~ FALSE
+            ),
+            base_width = case_when(
+              effect_safe == "Tension (trade-off)" ~ 3.2,
+              effect_safe == "Synergy (co-benefit)" ~ 2.6,
+              TRUE ~ 2.0
+            ),
+            width = ifelse(direct_or_indirect_safe == "Indirect", pmax(1.2, base_width - 1.0), base_width),
+            edge_title = paste0(
+              "<b>", from_short, " -> ", to_short, "</b><br>",
+              "Country: ", country, "<br>",
+              "Theme: ", theme, "<br>",
+              "Family: ", interaction_family, "<br>",
+              "Effect: ", effect, "<br>",
+              "Policy tension: ", policy_tension, "<br>",
+              "Summary: ", interaction_summary, "<br>",
+              "Evidence: ", evidence_level, "<br>",
+              "Reference: ", reference
+            )
+          ) %>%
+          transmute(
+            id = edge_id,
+            from,
+            to,
+            title = edge_title,
+            dashes,
+            arrows = ifelse(bidirectional, "to;from", "to"),
+            color = edge_color,
+            width
+          )
+      } else {
+        plot_edges <- data.frame(
+          id = character(),
+          from = character(),
+          to = character(),
+          title = character(),
+          dashes = logical(),
+          arrows = character(),
+          color = character(),
+          width = numeric()
+        )
+      }
+
+      visNetwork(plot_nodes, plot_edges, width = "100%", height = "620px") %>%
+        visNodes(
+          borderWidth = 1.2,
+          shadow = list(enabled = TRUE, size = 8, x = 1, y = 2),
+          font = list(face = "Inter", size = 14)
+        ) %>%
+        visEdges(smooth = list(enabled = TRUE, type = "dynamic", roundness = 0.25)) %>%
+        visLayout(randomSeed = 42, improvedLayout = TRUE) %>%
+        visOptions(highlightNearest = list(enabled = TRUE, hover = TRUE)) %>%
+        visInteraction(hover = TRUE, navigationButtons = TRUE, tooltipDelay = 100) %>%
+        visEvents(
+          selectNode = "function(params){ if(params.nodes.length){ Shiny.setInputValue('network_node_selected', params.nodes[0], {priority: 'event'}); } }",
+          deselectNode = "function(params){ Shiny.setInputValue('network_node_selected', null, {priority: 'event'}); }"
+        ) %>%
+        visPhysics(
+          solver = "forceAtlas2Based",
+          stabilization = list(enabled = TRUE, iterations = 250, fit = TRUE)
+        )
+    }, error = function(e) {
+      e
+    })
+
+    if (inherits(net, "error")) {
+      validate(need(FALSE, paste("Unable to render network:", conditionMessage(net))))
     }
 
-    visNetwork(plot_nodes, plot_edges, width = "100%", height = "620px") %>%
-      visNodes(borderWidth = 1.2, shadow = list(enabled = TRUE, size = 8, x = 1, y = 2)) %>%
-      visEdges(smooth = list(enabled = TRUE, type = "dynamic", roundness = 0.25)) %>%
-      visIgraphLayout(layout = "layout_with_fr") %>%
-      visOptions(
-        highlightNearest = list(enabled = TRUE, hover = TRUE),
-        nodesIdSelection = list(enabled = TRUE, useLabels = TRUE)
-      ) %>%
-      visInteraction(hover = TRUE, navigationButtons = TRUE, tooltipDelay = 100) %>%
-      visEvents(
-        selectNode = "function(params){ if(params.nodes.length){ Shiny.setInputValue('network_node_selected', params.nodes[0], {priority: 'event'}); } }",
-        deselectNode = "function(params){ Shiny.setInputValue('network_node_selected', null, {priority: 'event'}); }"
-      ) %>%
-      visPhysics(enabled = FALSE)
+    net
   })
 
   output$node_drawer <- renderUI({

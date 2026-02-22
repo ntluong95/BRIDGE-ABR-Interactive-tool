@@ -126,28 +126,154 @@ body {
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.22);
 }
 
-.navbar-nav .nav-item:last-child .nav-link {
-  border: 1px solid rgba(255, 255, 255, 0.78);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  padding-left: 0.95rem !important;
-  padding-right: 0.95rem !important;
-}
-
-.navbar-nav .nav-item:last-child .nav-link:hover,
-.navbar-nav .nav-item:last-child .nav-link:focus {
-  background: rgba(255, 255, 255, 0.22);
-  border-color: #ffffff;
-}
-
-.navbar-nav .nav-item:last-child .nav-link.active {
-  background: #ffffff;
-  border-color: #ffffff;
-  color: var(--brand) !important;
-}
-
 .download-tab-label {
   font-weight: 600;
+}
+
+.navbar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 8px;
+}
+
+.navbar .about-trigger-btn,
+.navbar .about-trigger-btn.btn,
+.navbar .about-trigger-btn.btn-default {
+  --bs-btn-color: #f5f7fa !important;
+  --bs-btn-bg: #7f2a2f !important;
+  --bs-btn-border-color: #7f2a2f !important;
+  --bs-btn-hover-color: #f5f7fa !important;
+  --bs-btn-hover-bg: #7f2a2f !important;
+  --bs-btn-hover-border-color: #7f2a2f !important;
+  --bs-btn-focus-shadow-rgb: 127, 42, 47 !important;
+  --bs-btn-active-color: #f5f7fa !important;
+  --bs-btn-active-bg: #7f2a2f !important;
+  --bs-btn-active-border-color: #7f2a2f !important;
+  --bs-btn-disabled-color: #f5f7fa !important;
+  --bs-btn-disabled-bg: #7f2a2f !important;
+  --bs-btn-disabled-border-color: #7f2a2f !important;
+  border: 1px solid #7f2a2f !important;
+  background: #7f2a2f !important;
+  color: #f5f7fa !important;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 0.36rem 0.86rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 1 !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+}
+
+.navbar .about-trigger-btn .bi,
+.navbar .about-trigger-btn svg {
+  color: #f5f7fa !important;
+  fill: currentColor;
+}
+
+.navbar .about-trigger-btn:hover,
+.navbar .about-trigger-btn:focus {
+  background: #7f2a2f !important;
+  border-color: #7f2a2f !important;
+  color: #f5f7fa !important;
+  filter: brightness(1.05);
+}
+
+.navbar .about-trigger-btn:focus-visible {
+  outline: 2px solid #f5f7fa;
+  outline-offset: 1px;
+}
+
+.partner-logos {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.partner-logo-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 2px 7px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.08);
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.partner-logo-link:hover,
+.partner-logo-link:focus {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.88);
+  transform: translateY(-1px);
+}
+
+.partner-logo-img {
+  height: 26px;
+  width: auto;
+  max-width: 112px;
+  object-fit: contain;
+  display: block;
+}
+
+.modal-logo-img {
+  height: 70px;
+  width: auto;
+  max-width: 250px;
+  object-fit: contain;
+  display: block;
+}
+
+.project-modal .modal-content {
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.project-modal .modal-header {
+  background: linear-gradient(180deg, #fff8f8 0%, #fff 100%);
+  border-bottom: 1px solid #f0d8da;
+}
+
+
+
+.project-modal-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--brand-dark);
+  font-weight: 700;
+}
+
+.project-modal-body {
+  display: flex;
+  background: #fff;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.project-description {
+  color: #1f2937;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.modal-logo-row {
+  display: flex;
+  background: #fff;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.project-modal .partner-logo-link {
+  min-height: 48px;
+  padding: 5px 10px;
 }
 
 /* Core layout */
@@ -327,7 +453,7 @@ body {
   padding-bottom: 10px;
 }
 
-.bootstrap-select > .dropdown-toggle,
+.bootstrap-select>.dropdown-toggle,
 .form-control,
 .selectize-input,
 .pretty {
@@ -713,6 +839,25 @@ body {
     font-size: 0.98rem;
   }
 
+  .navbar-actions {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 6px;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .partner-logos {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .partner-logo-img {
+    height: 24px;
+  }
+
   .dashboard-sidebar .sidebar-content {
     padding-bottom: 12px;
   }
@@ -748,4 +893,16 @@ body {
   .title-block h2 {
     font-size: 1.18rem;
   }
+
+  .modal-logo-img {
+    height: 36px;
+    max-width: 170px;
+  }
+}
+
+.modal-body,
+.modal-header,
+.modal-footer,
+.project-modal {
+  background-color: #fff !important;
 }
