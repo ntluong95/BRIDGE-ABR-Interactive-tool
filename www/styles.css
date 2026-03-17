@@ -25,7 +25,7 @@ body {
 }
 
 body {
-  font-family: "Inter", "Source Sans 3", "Segoe UI", Arial, sans-serif;
+  font-type: "Inter", "Source Sans 3", "Segoe UI", Arial, sans-serif;
   font-size: 14px;
 }
 
@@ -551,7 +551,7 @@ div.vis-tooltip {
   border: 1px solid #d1d5db !important;
   border-radius: 8px !important;
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.16) !important;
-  font-family: "Inter", "Source Sans 3", "Segoe UI", Arial, sans-serif !important;
+  font-type: "Inter", "Source Sans 3", "Segoe UI", Arial, sans-serif !important;
   font-size: 12.5px !important;
   line-height: 1.45 !important;
   padding: 8px 10px !important;

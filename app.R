@@ -1,6 +1,5 @@
 pacman::p_load(
   shiny,
-  dplyr,
   readr,
   stringr,
   DT,
@@ -8,17 +7,18 @@ pacman::p_load(
   bslib,
   bsicons,
   shinyWidgets,
-  shinycssloaders
+  shinycssloaders,
+  tidyverse
 )
 
 
 data_dir <- "data"
-nodes_path <- file.path(data_dir, "policy_nodes.csv")
+nodes_path <- file.path(data_dir, "policy_nodes_description.csv")
 interactions_path <- file.path(data_dir, "policy_interactions.csv")
 
 if (!file.exists(nodes_path) || !file.exists(interactions_path)) {
   stop(
-    "Missing data files. Expected data/policy_nodes.csv and data/policy_interactions.csv"
+    "Missing data files. Expected data/policy_nodes_description.csv and data/policy_interactions.csv"
   )
 }
 
@@ -38,7 +38,7 @@ required_interaction_cols <- c(
   "edge_id",
   "from",
   "to",
-  "interaction_family",
+  "interaction_type",
   "country",
   "theme",
   "effect",
@@ -52,10 +52,33 @@ required_interaction_cols <- c(
 )
 
 if (!all(required_node_cols %in% names(nodes))) {
-  stop("data/policy_nodes.csv is missing required columns")
+  stop("data/policy_nodes_description.csv is missing required columns")
 }
 if (!all(required_interaction_cols %in% names(interactions))) {
   stop("data/policy_interactions.csv is missing required columns")
+}
+
+derive_interaction_type <- function(from_id, to_id) {
+  from_amr <- str_detect(from_id, "^amr")
+  to_amr <- str_detect(to_id, "^amr")
+
+  case_when(
+    from_amr & to_amr ~ "AMR-AMR",
+    !from_amr & !to_amr ~ "SDG-SDG",
+    TRUE ~ "AMR-SDG"
+  )
+}
+
+normalize_effect <- function(effect_value) {
+  case_when(
+    effect_value %in% c("Align", "Synergy (co-benefit)") ~ "Synergy (co-benefit)",
+    effect_value %in% c("Conflict", "Tension (trade-off)") ~ "Tension (trade-off)",
+    effect_value %in% c(
+      "Independent",
+      "Mixed / context-dependent"
+    ) ~ "Mixed / context-dependent",
+    TRUE ~ effect_value
+  )
 }
 
 nodes <- nodes %>%
@@ -69,12 +92,16 @@ interactions <- interactions %>%
     across(where(is.character), str_squish),
     from = str_to_lower(from),
     to = str_to_lower(to),
+    interaction_type = derive_interaction_type(from, to),
+    effect_raw = effect,
+    effect = normalize_effect(effect),
+    theme = if_else(is.na(theme) | theme == "", "Unclassified", theme),
     bidirectional = as.logical(bidirectional),
     context_dependent = as.logical(context_dependent)
   )
 
 if (anyDuplicated(nodes$id) > 0) {
-  stop("Duplicate node ids found in data/policy_nodes.csv")
+  stop("Duplicate node ids found in data/policy_nodes_description.csv")
 }
 if (anyDuplicated(interactions$edge_id) > 0) {
   stop("Duplicate edge ids found in data/policy_interactions.csv")
@@ -82,7 +109,9 @@ if (anyDuplicated(interactions$edge_id) > 0) {
 if (
   any(!interactions$from %in% nodes$id) || any(!interactions$to %in% nodes$id)
 ) {
-  stop("Interaction table contains node ids not found in policy_nodes.csv")
+  stop(
+    "Interaction table contains node ids not found in policy_nodes_description.csv"
+  )
 }
 
 node_lookup <- nodes %>%
@@ -111,7 +140,7 @@ interactions_enriched <- interactions %>%
         edge_id,
         country,
         theme,
-        interaction_family,
+        interaction_type,
         effect,
         from_short,
         to_short,
@@ -123,10 +152,10 @@ interactions_enriched <- interactions %>%
     )
   )
 
-family_choices <- c("AMR-AMR", "SDG-SDG", "AMR-SDG")
-family_choices <- intersect(
-  family_choices,
-  sort(unique(interactions_enriched$interaction_family))
+type_choices <- c("AMR-AMR", "SDG-SDG", "AMR-SDG")
+type_choices <- intersect(
+  type_choices,
+  sort(unique(interactions_enriched$interaction_type))
 )
 country_choices <- sort(unique(interactions_enriched$country))
 theme_choices <- sort(unique(interactions_enriched$theme))
@@ -139,10 +168,11 @@ effect_choices <- intersect(
   effect_choices,
   sort(unique(interactions_enriched$effect))
 )
-evidence_choices <- c("High", "Medium", "Emerging")
-evidence_choices <- intersect(
-  evidence_choices,
-  sort(unique(interactions_enriched$evidence_level))
+evidence_priority <- c("High", "Medium", "Low", "Emerging")
+evidence_present <- sort(unique(interactions_enriched$evidence_level))
+evidence_choices <- c(
+  evidence_priority[evidence_priority %in% evidence_present],
+  sort(setdiff(evidence_present, evidence_priority))
 )
 objective_choices <- setNames(
   nodes$id,
@@ -283,7 +313,7 @@ ui <- page_navbar(
   title = div(
     class = "app-brand",
     tags$img(
-      src = "logo-bridge-abr.svg",
+      src = "logo-bridge-abr.png",
       alt = "BRIDGE-ABR logo",
       class = "app-brand-logo"
     ),
@@ -339,10 +369,10 @@ ui <- page_navbar(
               title = filter_title("diagram-3", "Interaction Types"),
               value = "Types",
               pickerInput(
-                "family_filter",
+                "type_filter",
                 label = NULL,
-                choices = family_choices,
-                selected = family_choices,
+                choices = type_choices,
+                selected = type_choices,
                 multiple = TRUE,
                 options = picker_options
               )
@@ -532,7 +562,7 @@ ui <- page_navbar(
       ),
       div(
         class = "data-card",
-        h4("Interaction counts by family, country, and effect"),
+        h4("Interaction counts by type, country, and effect"),
         shinycssloaders::withSpinner(
           DTOutput("summary_table"),
           type = 4,
@@ -622,7 +652,7 @@ server <- function(input, output, session) {
   }
 
   default_filters <- list(
-    family = family_choices,
+    type = type_choices,
     country = country_choices,
     theme = theme_choices,
     effect = effect_choices,
@@ -634,7 +664,7 @@ server <- function(input, output, session) {
   )
 
   applied_filters <- reactiveValues(
-    family = default_filters$family,
+    type = default_filters$type,
     country = default_filters$country,
     theme = default_filters$theme,
     effect = default_filters$effect,
@@ -699,8 +729,8 @@ server <- function(input, output, session) {
   reset_filter_state <- function() {
     updatePickerInput(
       session,
-      "family_filter",
-      selected = default_filters$family
+      "type_filter",
+      selected = default_filters$type
     )
     updatePickerInput(
       session,
@@ -735,7 +765,7 @@ server <- function(input, output, session) {
     )
     updateTextInput(session, "search_text", value = default_filters$search_text)
 
-    applied_filters$family <- default_filters$family
+    applied_filters$type <- default_filters$type
     applied_filters$country <- default_filters$country
     applied_filters$theme <- default_filters$theme
     applied_filters$effect <- default_filters$effect
@@ -748,7 +778,7 @@ server <- function(input, output, session) {
   }
 
   observeEvent(input$apply_filters, {
-    applied_filters$family <- input$family_filter
+    applied_filters$type <- input$type_filter
     applied_filters$country <- input$country_filter
     applied_filters$theme <- input$theme_filter
     applied_filters$effect <- input$effect_filter
@@ -771,8 +801,8 @@ server <- function(input, output, session) {
   filtered_interactions <- reactive({
     df <- interactions_enriched
 
-    if (length(applied_filters$family) > 0) {
-      df <- df %>% filter(interaction_family %in% applied_filters$family)
+    if (length(applied_filters$type) > 0) {
+      df <- df %>% filter(interaction_type %in% applied_filters$type)
     } else {
       df <- df[0, ]
     }
@@ -832,7 +862,7 @@ server <- function(input, output, session) {
 
   output$dynamic_title <- renderUI({
     country_label <- compact_selection(applied_filters$country, country_choices)
-    family_label <- compact_selection(applied_filters$family, family_choices)
+    type_label <- compact_selection(applied_filters$type, type_choices)
 
     div(
       class = "title-block",
@@ -842,7 +872,7 @@ server <- function(input, output, session) {
         paste(country_label),
         tags$span(" | "),
         tags$strong("Types:"),
-        paste(family_label)
+        paste(type_label)
       )
     )
   })
@@ -1022,8 +1052,8 @@ server <- function(input, output, session) {
                 "Theme: ",
                 theme,
                 "<br>",
-                "Family: ",
-                interaction_family,
+                "type: ",
+                interaction_type,
                 "<br>",
                 "Effect: ",
                 effect,
@@ -1300,7 +1330,7 @@ server <- function(input, output, session) {
         `Edge ID` = edge_id,
         Country = country,
         Theme = theme,
-        `Interaction Type` = interaction_family,
+        `Interaction Type` = interaction_type,
         `From Objective` = paste0(from_short, " - ", from_label),
         `To Objective` = paste0(to_short, " - ", to_label),
         Effect = effect,
@@ -1328,10 +1358,10 @@ server <- function(input, output, session) {
 
   output$country_summary_table <- renderDT({
     tbl <- filtered_interactions() %>%
-      count(country, interaction_family, effect, theme, sort = TRUE) %>%
+      count(country, interaction_type, effect, theme, sort = TRUE) %>%
       rename(
         Country = country,
-        `Interaction Type` = interaction_family,
+        `Interaction Type` = interaction_type,
         Effect = effect,
         Theme = theme,
         Count = n
@@ -1369,10 +1399,10 @@ server <- function(input, output, session) {
 
   output$summary_table <- renderDT({
     tbl <- interactions_enriched %>%
-      count(country, interaction_family, effect, sort = TRUE) %>%
+      count(country, interaction_type, effect, sort = TRUE) %>%
       rename(
         Country = country,
-        `Interaction Type` = interaction_family,
+        `Interaction Type` = interaction_type,
         Effect = effect,
         `Number of Interactions` = n
       )
@@ -1394,7 +1424,7 @@ server <- function(input, output, session) {
         edge_id,
         country,
         theme,
-        interaction_family,
+        interaction_type,
         from,
         from_short,
         from_label,

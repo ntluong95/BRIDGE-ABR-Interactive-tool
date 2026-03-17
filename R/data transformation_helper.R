@@ -1,5 +1,5 @@
 #install.packages("pacman")
-install.packages("rgeos", repos = "http://R-Forge.R-project.org")
+# install.packages("rgeos", repos = "http://R-Forge.R-project.org")
 pacman::p_load(
   tidyverse,
   shiny,

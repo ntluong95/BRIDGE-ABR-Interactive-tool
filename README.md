@@ -22,7 +22,7 @@ with effect categories:
 
 - `/Users/luongnguyen/Library/CloudStorage/OneDrive-SharedLibraries-Uppsalauniversitet/ReAct - BRIDGE ABR project/03 Workshop/BRIDGE-ABR Interactive tool/app.R`
 - `/Users/luongnguyen/Library/CloudStorage/OneDrive-SharedLibraries-Uppsalauniversitet/ReAct - BRIDGE ABR project/03 Workshop/BRIDGE-ABR Interactive tool/www/styles.css`
-- `/Users/luongnguyen/Library/CloudStorage/OneDrive-SharedLibraries-Uppsalauniversitet/ReAct - BRIDGE ABR project/03 Workshop/BRIDGE-ABR Interactive tool/www/logo-bridge-abr.svg`
+- `/Users/luongnguyen/Library/CloudStorage/OneDrive-SharedLibraries-Uppsalauniversitet/ReAct - BRIDGE ABR project/03 Workshop/BRIDGE-ABR Interactive tool/www/logo-bridge-abr.png`
 - `/Users/luongnguyen/Library/CloudStorage/OneDrive-SharedLibraries-Uppsalauniversitet/ReAct - BRIDGE ABR project/03 Workshop/BRIDGE-ABR Interactive tool/data/policy_nodes.csv`
 - `/Users/luongnguyen/Library/CloudStorage/OneDrive-SharedLibraries-Uppsalauniversitet/ReAct - BRIDGE ABR project/03 Workshop/BRIDGE-ABR Interactive tool/data/policy_interactions.csv`
 
@@ -59,7 +59,7 @@ Required columns:
 - `edge_id`
 - `from`
 - `to`
-- `interaction_family`
+- `interaction_type`
 - `country`
 - `theme`
 - `effect`
