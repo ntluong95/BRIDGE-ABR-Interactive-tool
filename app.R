@@ -142,6 +142,7 @@ interactions_enriched <- interactions %>%
         theme,
         interaction_type,
         effect,
+        source,
         from_short,
         to_short,
         interaction_summary,
@@ -178,6 +179,7 @@ objective_choices <- setNames(
   nodes$id,
   paste0(nodes$short_label, " - ", nodes$label)
 )
+network_focus_choices <- c("All objectives" = "", objective_choices)
 
 sdg_palette <- c(
   "SDG-01" = "#E5243B",
@@ -499,6 +501,46 @@ ui <- page_navbar(
           div(
             class = "network-card",
             div(
+              class = "network-toolbar",
+              div(
+                class = "network-toolbar-controls",
+                div(
+                  class = "network-filter-group",
+                  tags$label(
+                    class = "network-filter-label",
+                    `for` = "source_view",
+                    "Policy layer"
+                  ),
+                  selectInput(
+                    "source_view",
+                    label = NULL,
+                    choices = c(
+                      "Objective only" = "Objective",
+                      "Implementation only" = "Implementation",
+                      "All layers" = "All"
+                    ),
+                    selected = "Objective",
+                    width = "100%"
+                  )
+                ),
+                div(
+                  class = "network-filter-group",
+                  tags$label(
+                    class = "network-filter-label",
+                    `for` = "network_focus_node",
+                    "Focus objective"
+                  ),
+                  selectInput(
+                    "network_focus_node",
+                    label = NULL,
+                    choices = network_focus_choices,
+                    selected = "",
+                    width = "100%"
+                  )
+                )
+              )
+            ),
+            div(
               class = "network-stage",
               shinycssloaders::withSpinner(
                 visNetworkOutput("interaction_network", height = "620px"),
@@ -605,6 +647,13 @@ server <- function(input, output, session) {
     format(x, big.mark = ",", scientific = FALSE, trim = TRUE)
   }
 
+  safely_update_network <- function(expr) {
+    tryCatch(
+      force(expr),
+      error = function(e) invisible(NULL)
+    )
+  }
+
   normalize_node_selection <- function(value) {
     if (is.null(value) || length(value) == 0) {
       return(NULL)
@@ -650,6 +699,15 @@ server <- function(input, output, session) {
       length(values) - limit
     )
   }
+
+  source_view <- reactive({
+    current_value <- input$source_view
+    if (is.null(current_value) || !nzchar(current_value)) {
+      "Objective"
+    } else {
+      current_value
+    }
+  })
 
   default_filters <- list(
     type = type_choices,
@@ -719,11 +777,50 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$network_node_selected, {
-    selected_node(normalize_node_selection(input$network_node_selected))
+    node_id <- normalize_node_selection(input$network_node_selected)
+    selected_node(node_id)
+    updateSelectInput(
+      session,
+      "network_focus_node",
+      selected = if (is.null(node_id)) "" else node_id
+    )
   })
 
   observeEvent(input$clear_selected_node, {
     selected_node(NULL)
+    updateSelectInput(session, "network_focus_node", selected = "")
+    safely_update_network({
+      visNetworkProxy("interaction_network") %>% visUnselectAll() %>% visFit()
+    })
+  })
+
+  observeEvent(input$network_focus_node, {
+    node_id <- normalize_node_selection(input$network_focus_node)
+    if (!is.null(node_id) && !node_id %in% nodes$id) {
+      node_id <- NULL
+    }
+
+    selected_node(node_id)
+
+    safely_update_network({
+      proxy <- visNetworkProxy("interaction_network")
+      if (is.null(node_id)) {
+        proxy %>% visUnselectAll() %>% visFit()
+      } else {
+        proxy %>%
+          visSelectNodes(id = node_id) %>%
+          visFocus(
+            id = node_id,
+            scale = 1.08,
+            animation = list(duration = 300)
+        )
+      }
+    })
+  }, ignoreInit = FALSE)
+
+  observeEvent(input$source_view, {
+    selected_node(NULL)
+    updateSelectInput(session, "network_focus_node", selected = "")
   })
 
   reset_filter_state <- function() {
@@ -764,6 +861,8 @@ server <- function(input, output, session) {
       value = default_filters$bidirectional_only
     )
     updateTextInput(session, "search_text", value = default_filters$search_text)
+    updateSelectInput(session, "source_view", selected = "Objective")
+    updateSelectInput(session, "network_focus_node", selected = "")
 
     applied_filters$type <- default_filters$type
     applied_filters$country <- default_filters$country
@@ -831,6 +930,10 @@ server <- function(input, output, session) {
       df <- df[0, ]
     }
 
+    if (!identical(source_view(), "All")) {
+      df <- df %>% filter(source == source_view())
+    }
+
     if (isTRUE(applied_filters$context_only)) {
       df <- df %>% filter(context_dependent)
     }
@@ -863,6 +966,11 @@ server <- function(input, output, session) {
   output$dynamic_title <- renderUI({
     country_label <- compact_selection(applied_filters$country, country_choices)
     type_label <- compact_selection(applied_filters$type, type_choices)
+    source_label <- if (identical(source_view(), "All")) {
+      "Objective + Implementation"
+    } else {
+      source_view()
+    }
 
     div(
       class = "title-block",
@@ -872,7 +980,10 @@ server <- function(input, output, session) {
         paste(country_label),
         tags$span(" | "),
         tags$strong("Types:"),
-        paste(type_label)
+        paste(type_label),
+        tags$span(" | "),
+        tags$strong("Source:"),
+        source_label
       )
     )
   })
@@ -923,21 +1034,6 @@ server <- function(input, output, session) {
           "__none__"
         } else {
           selected_id
-        }
-        selected_id_dropdown <- if (
-          !is.null(selected_id) && selected_id %in% nodes$id
-        ) {
-          selected_id
-        } else {
-          NULL
-        }
-        nodes_id_selection_opts <- list(
-          enabled = TRUE,
-          useLabels = TRUE,
-          main = "Focus objective"
-        )
-        if (!is.null(selected_id_dropdown) && nzchar(selected_id_dropdown)) {
-          nodes_id_selection_opts$selected <- selected_id_dropdown
         }
 
         plot_nodes <- nodes %>%
@@ -1121,8 +1217,7 @@ server <- function(input, output, session) {
           ) %>%
           visLayout(randomSeed = 42, improvedLayout = TRUE) %>%
           visOptions(
-            highlightNearest = list(enabled = TRUE, hover = TRUE),
-            nodesIdSelection = nodes_id_selection_opts
+            highlightNearest = list(enabled = TRUE, hover = TRUE)
           ) %>%
           visInteraction(
             hover = TRUE,
