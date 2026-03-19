@@ -1,3 +1,5 @@
+# Preparation ------------------------------------------------------------
+
 pacman::p_load(
   shiny,
   readr,
@@ -23,7 +25,8 @@ if (!file.exists(nodes_path) || !file.exists(interactions_path)) {
 }
 
 nodes <- read_csv(nodes_path, show_col_types = FALSE)
-interactions <- read_csv(interactions_path, show_col_types = FALSE)
+interactions <- read_csv(interactions_path, show_col_types = FALSE) %>%
+  select()
 
 required_node_cols <- c(
   "id",
@@ -71,12 +74,15 @@ derive_interaction_type <- function(from_id, to_id) {
 
 normalize_effect <- function(effect_value) {
   case_when(
-    effect_value %in% c("Align", "Synergy (co-benefit)") ~ "Synergy (co-benefit)",
-    effect_value %in% c("Conflict", "Tension (trade-off)") ~ "Tension (trade-off)",
-    effect_value %in% c(
-      "Independent",
-      "Mixed / context-dependent"
-    ) ~ "Mixed / context-dependent",
+    effect_value %in%
+      c("Align", "Synergy (co-benefit)") ~ "Synergy (co-benefit)",
+    effect_value %in%
+      c("Conflict", "Tension (trade-off)") ~ "Tension (trade-off)",
+    effect_value %in%
+      c(
+        "Independent",
+        "Mixed / context-dependent"
+      ) ~ "Mixed / context-dependent",
     TRUE ~ effect_value
   )
 }
@@ -310,6 +316,8 @@ picker_options <- list(
   `selected-text-format` = "count > 2",
   size = 8
 )
+
+# ui.R -------------------------------------------------------------------
 
 ui <- page_navbar(
   title = div(
@@ -642,6 +650,8 @@ ui <- page_navbar(
   )
 )
 
+# server.R ---------------------------------------------------------------
+
 server <- function(input, output, session) {
   format_count <- function(x) {
     format(x, big.mark = ",", scientific = FALSE, trim = TRUE)
@@ -758,13 +768,13 @@ server <- function(input, output, session) {
               "modal-logo-img"
             ),
             partner_logo(
-              "react_logo.png",
+              "ReAct_logo.png",
               "ReAct Europe logo",
               partner_links$react,
               "modal-logo-img"
             ),
             partner_logo(
-              "src_logo.png",
+              "SRC_logo.png",
               "Stockholm Resilience Centre logo",
               partner_links$src,
               "modal-logo-img"
@@ -794,29 +804,33 @@ server <- function(input, output, session) {
     })
   })
 
-  observeEvent(input$network_focus_node, {
-    node_id <- normalize_node_selection(input$network_focus_node)
-    if (!is.null(node_id) && !node_id %in% nodes$id) {
-      node_id <- NULL
-    }
-
-    selected_node(node_id)
-
-    safely_update_network({
-      proxy <- visNetworkProxy("interaction_network")
-      if (is.null(node_id)) {
-        proxy %>% visUnselectAll() %>% visFit()
-      } else {
-        proxy %>%
-          visSelectNodes(id = node_id) %>%
-          visFocus(
-            id = node_id,
-            scale = 1.08,
-            animation = list(duration = 300)
-        )
+  observeEvent(
+    input$network_focus_node,
+    {
+      node_id <- normalize_node_selection(input$network_focus_node)
+      if (!is.null(node_id) && !node_id %in% nodes$id) {
+        node_id <- NULL
       }
-    })
-  }, ignoreInit = FALSE)
+
+      selected_node(node_id)
+
+      safely_update_network({
+        proxy <- visNetworkProxy("interaction_network")
+        if (is.null(node_id)) {
+          proxy %>% visUnselectAll() %>% visFit()
+        } else {
+          proxy %>%
+            visSelectNodes(id = node_id) %>%
+            visFocus(
+              id = node_id,
+              scale = 1.08,
+              animation = list(duration = 300)
+            )
+        }
+      })
+    },
+    ignoreInit = FALSE
+  )
 
   observeEvent(input$source_view, {
     selected_node(NULL)
@@ -1570,5 +1584,7 @@ server <- function(input, output, session) {
     }
   )
 }
+
+# App Launching ----------------------------------------------------------
 
 shinyApp(ui = ui, server = server)

@@ -1,0 +1,12 @@
+name: SDG-ABR
+title: SDG-ABR
+username: bridge-abr
+account: bridge-abr
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 16928320
+bundleId: 11726040
+url: https://bridge-abr.shinyapps.io/SDG-ABR/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
