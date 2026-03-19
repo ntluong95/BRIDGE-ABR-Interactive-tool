@@ -25,8 +25,7 @@ if (!file.exists(nodes_path) || !file.exists(interactions_path)) {
 }
 
 nodes <- read_csv(nodes_path, show_col_types = FALSE)
-interactions <- read_csv(interactions_path, show_col_types = FALSE) %>%
-  select()
+interactions <- read_csv(interactions_path, show_col_types = FALSE)
 
 required_node_cols <- c(
   "id",
