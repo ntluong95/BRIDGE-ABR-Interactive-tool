@@ -1269,13 +1269,13 @@ server <- function(input, output, session) {
               "modal-logo-img"
             ),
             partner_logo(
-              "ReAct_logo.png",
+              "react_logo.png",
               "ReAct Europe logo",
               partner_links$react,
               "modal-logo-img"
             ),
             partner_logo(
-              "SRC_logo.png",
+              "src_logo.png",
               "Stockholm Resilience Centre logo",
               partner_links$src,
               "modal-logo-img"
