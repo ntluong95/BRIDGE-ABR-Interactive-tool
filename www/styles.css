@@ -382,6 +382,33 @@ body {
   color: #334155;
 }
 
+.guide-hero p {
+  max-width: 980px;
+  line-height: 1.65;
+  margin-bottom: 0;
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.guide-grid-bottom {
+  margin-top: 14px;
+}
+
+.guide-grid .data-card ul,
+.guide-grid .data-card ol {
+  margin-bottom: 0;
+  padding-left: 1.15rem;
+}
+
+.guide-grid .data-card li + li {
+  margin-top: 0.42rem;
+}
+
 /* Metrics */
 .metrics-grid {
   display: grid;
@@ -894,6 +921,10 @@ div.vis-tooltip b {
 }
 
 @media (max-width: 992px) {
+  .guide-grid {
+    grid-template-columns: 1fr;
+  }
+
   .navbar-brand {
     min-height: 56px;
   }

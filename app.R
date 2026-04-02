@@ -621,6 +621,161 @@ ui <- page_navbar(
     )
   ),
 
+  nav_panel(
+    "User Guide",
+    div(
+      class = "page-wrap",
+      div(
+        class = "data-card guide-hero",
+        h3("How to use Policy Tension Explorer"),
+        p(
+          "This Shiny app helps users explore how AMR objectives and SDG goals interact",
+          "within national action plans. It supports three interaction families:",
+          tags$strong(" AMR-AMR, SDG-SDG, and AMR-SDG "),
+          "and lets you inspect interactions at both the",
+          tags$strong(" objective "),
+          "and",
+          tags$strong(" implementation "),
+          "layers."
+        )
+      ),
+
+      div(
+        class = "guide-grid",
+        div(
+          class = "data-card",
+          h4("What the app shows"),
+          tags$ul(
+            tags$li(
+              tags$strong("Network view: "),
+              "a visual map of interactions between AMR objectives and SDG goals."
+            ),
+            tags$li(
+              tags$strong("Metrics: "),
+              "summary counts of synergies, trade-offs, mixed interactions, and total interactions in the current filtered view."
+            ),
+            tags$li(
+              tags$strong("Interaction table: "),
+              "the underlying records shown in the network, including country, effect, evidence level, reference, and summary text."
+            ),
+            tags$li(
+              tags$strong("Objective dictionary: "),
+              "a reference list for all 5 WHO GAP AMR objectives and all 17 UN SDGs used in the app."
+            )
+          )
+        ),
+        div(
+          class = "data-card",
+          h4("How to read the network"),
+          tags$ul(
+            tags$li(
+              tags$strong("AMR nodes: "),
+              "WHO Global Action Plan objectives shown as AMR-labelled nodes."
+            ),
+            tags$li(
+              tags$strong("SDG nodes: "),
+              "UN Sustainable Development Goals shown with SDG icons."
+            ),
+            tags$li(
+              tags$strong("Green edges: "),
+              "synergies or reinforcing relationships."
+            ),
+            tags$li(
+              tags$strong("Red edges: "),
+              "trade-offs or tensions."
+            ),
+            tags$li(
+              tags$strong("Amber edges: "),
+              "mixed or context-dependent relationships."
+            ),
+            tags$li(
+              tags$strong("Solid vs dashed lines: "),
+              "solid lines indicate direct interactions, while dashed lines indicate indirect interactions."
+            )
+          )
+        ),
+        div(
+          class = "data-card",
+          h4("What the policy layers mean"),
+          tags$ul(
+            tags$li(
+              tags$strong("Objective layer: "),
+              "shows how strategic objectives align, conflict, or interact conceptually across policy documents."
+            ),
+            tags$li(
+              tags$strong("Implementation layer: "),
+              "shows how implementation measures, delivery mechanisms, institutions, and operational actions interact in practice."
+            ),
+            tags$li(
+              tags$strong("All layers: "),
+              "combines both views in one network."
+            )
+          )
+        ),
+        div(
+          class = "data-card",
+          h4("How to use the app"),
+          tags$ol(
+            tags$li(
+              "Start in ",
+              tags$strong("Policy Explorer"),
+              " to see the network."
+            ),
+            tags$li(
+              "Use the ",
+              tags$strong("Policy layer"),
+              " dropdown to switch between objective, implementation, or combined views."
+            ),
+            tags$li(
+              "Use ",
+              tags$strong("Focus objective"),
+              " to centre attention on one AMR objective or SDG goal."
+            ),
+            tags$li(
+              "Use the left sidebar filters to narrow by country, interaction type, theme, effect, or evidence."
+            ),
+            tags$li(
+              "Click a node in the network to open the right-side details drawer."
+            ),
+            tags$li(
+              "Review the filtered table below the network for the full evidence records and document references."
+            )
+          )
+        )
+      ),
+
+      div(
+        class = "guide-grid guide-grid-bottom",
+        div(
+          class = "data-card",
+          h4("Interpretation notes"),
+          tags$ul(
+            tags$li(
+              "A visible edge indicates that at least one interaction record matches the current filters."
+            ),
+            tags$li(
+              "The same pair of nodes can look different depending on whether you are viewing the objective layer or the implementation layer."
+            ),
+            tags$li(
+              "The network is intended as an exploration tool. Users should always cross-check interaction summaries and references in the table."
+            )
+          )
+        ),
+        div(
+          class = "data-card",
+          h4("Suggested workflow"),
+          tags$ol(
+            tags$li("Select a country or set of countries."),
+            tags$li("Choose the policy layer you want to inspect."),
+            tags$li("Focus on one objective if you want a cleaner network."),
+            tags$li("Compare the network with the filtered table."),
+            tags$li("Open the Objective Dictionary tab when you need full objective names and descriptions.")
+          )
+        )
+      )
+    )
+  ),
+
   nav_spacer(),
   nav_item(
     div(
