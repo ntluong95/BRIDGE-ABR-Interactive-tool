@@ -364,7 +364,7 @@ ui <- page_navbar(
     heading_font = font_google("Inter")
   ),
   header = tagList(
-    tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
+    tags$link(rel = "stylesheet", type = "text/css", href = "styles.css?v=6")
   ),
 
   nav_panel(
@@ -615,26 +615,83 @@ ui <- page_navbar(
   nav_panel(
     "Objective Dictionary",
     div(
-      class = "page-wrap",
+      class = "page-wrap dict-page",
+
+      # ── Hero banner ──────────────────────────────────────────────
       div(
-        class = "data-card",
-        h3("WHO GAP and SDG objective dictionary"),
-        p(
-          "This dictionary is fixed to 5 WHO GAP AMR objectives and 17 UN SDGs."
-        ),
-        shinycssloaders::withSpinner(
-          DTOutput("node_table"),
-          type = 4,
-          color = "#A4343A"
+        class = "dict-hero",
+        div(
+          class = "dict-hero-inner",
+          div(class = "dict-hero-eyebrow", bs_icon("journal-bookmark-fill"), " Reference"),
+          h1(class = "dict-hero-title", "Objective Dictionary"),
+          p(class = "dict-hero-subtitle",
+            "A complete reference for all 5 WHO Global Action Plan AMR objectives and 17 UN Sustainable Development Goals used in this tool."
+          )
         )
       ),
+
+      # ── Stat chips ───────────────────────────────────────────────
       div(
-        class = "data-card",
-        h4("Interaction counts by type, country, and effect"),
-        shinycssloaders::withSpinner(
-          DTOutput("summary_table"),
-          type = 4,
-          color = "#A4343A"
+        class = "dict-stats",
+        div(
+          class = "dict-stat",
+          div(class = "dict-stat-num", "5"),
+          div(class = "dict-stat-label", "AMR Objectives"),
+          div(class = "dict-stat-sub", "WHO Global Action Plan")
+        ),
+        div(
+          class = "dict-stat",
+          div(class = "dict-stat-num", "17"),
+          div(class = "dict-stat-label", "SDG Goals"),
+          div(class = "dict-stat-sub", "UN 2030 Agenda")
+        ),
+        div(
+          class = "dict-stat",
+          div(class = "dict-stat-num", "22"),
+          div(class = "dict-stat-label", "Total Objectives"),
+          div(class = "dict-stat-sub", "Mapped in this tool")
+        )
+      ),
+
+      # ── Objectives table ─────────────────────────────────────────
+      div(
+        class = "dict-section",
+        div(
+          class = "dict-section-header",
+          div(
+            div(class = "dict-section-label", bs_icon("list-columns-reverse"), " Objectives"),
+            h2(class = "dict-section-title", "Full objective dictionary")
+          ),
+          p(class = "dict-section-desc", "Browse all AMR and SDG objectives with their codes, framework source, and full descriptions.")
+        ),
+        div(
+          class = "dict-table-card",
+          shinycssloaders::withSpinner(
+            DTOutput("node_table"),
+            type = 4,
+            color = "#A4343A"
+          )
+        )
+      ),
+
+      # ── Summary table ────────────────────────────────────────────
+      div(
+        class = "dict-section",
+        div(
+          class = "dict-section-header",
+          div(
+            div(class = "dict-section-label", bs_icon("bar-chart-line-fill"), " Summary"),
+            h2(class = "dict-section-title", "Interaction counts by country and effect")
+          ),
+          p(class = "dict-section-desc", "Aggregated counts of interactions across countries, types, and effect categories in the full dataset.")
+        ),
+        div(
+          class = "dict-table-card",
+          shinycssloaders::withSpinner(
+            DTOutput("summary_table"),
+            type = 4,
+            color = "#A4343A"
+          )
         )
       )
     )
@@ -645,368 +702,420 @@ ui <- page_navbar(
     div(
       class = "page-wrap guide-page",
 
-      # ── Hero ──────────────────────────────────────────────────────────────
+      # ── Hero section ──────────────────────────────────────────────────
       div(
-        class = "guide-hero-card",
-        div(class = "guide-hero-badge", bs_icon("map"), " Policy Intelligence"),
-        h2(class = "guide-hero-title", "Policy Tension Explorer"),
-        p(
-          class = "guide-hero-lead",
-          "An interactive tool for exploring how",
-          tags$strong("Antimicrobial Resistance (AMR)"),
-          "objectives interact with",
-          tags$strong("Sustainable Development Goals (SDGs)"),
-          "inside national action plans. Map synergies, surface trade-offs, and compare policy priorities across countries — all in one visual environment."
-        ),
+        class = "g-hero",
         div(
-          class = "guide-hero-chips",
-          span(class = "guide-family-chip guide-family-amr",   "AMR–AMR"),
-          span(class = "guide-family-chip guide-family-sdg",   "SDG–SDG"),
-          span(class = "guide-family-chip guide-family-cross", "AMR–SDG")
-        )
-      ),
-
-      # ── 4-column overview grid ─────────────────────────────────────────
-      div(
-        class = "guide-overview-grid",
-
-        div(
-          class = "guide-card guide-card-accent1",
-          div(class = "guide-card-icon", bs_icon("diagram-3")),
-          h5("Network View"),
-          p("A live visual map of AMR–SDG interactions. Nodes represent objectives; edges show how they relate. Pan, zoom, and click to explore.")
-        ),
-        div(
-          class = "guide-card guide-card-accent2",
-          div(class = "guide-card-icon", bs_icon("bar-chart-line")),
-          h5("Interaction Metrics"),
-          p("Live counts of synergies, trade-offs, and mixed interactions in the current filtered view — updated every time you change a filter.")
-        ),
-        div(
-          class = "guide-card guide-card-accent3",
-          div(class = "guide-card-icon", bs_icon("table")),
-          h5("Evidence Table"),
-          p("The full record for each interaction: country context, policy layer, effect type, source documents, and extracted policy objectives.")
-        ),
-        div(
-          class = "guide-card guide-card-accent4",
-          div(class = "guide-card-icon", bs_icon("book")),
-          h5("Objective Dictionary"),
-          p("A fixed reference for all 5 WHO GAP AMR objectives and 17 UN SDGs. Use it to look up full goal names and descriptions.")
-        )
-      ),
-
-      # ── Network guide + Policy layers (two-col) ────────────────────────
-      div(
-        class = "guide-two-col",
-
-        # Left: reading the network
-        div(
-          class = "data-card guide-section-card",
-          div(
-            class = "guide-section-header",
-            bs_icon("share"),
-            h4("How to read the network")
+          class = "g-hero-inner",
+          div(class = "g-hero-eyebrow", bs_icon("globe2"), " BRIDGE-ABR Policy Intelligence"),
+          h1(class = "g-hero-title", "Welcome to the Policy Tension Explorer"),
+          p(class = "g-hero-subtitle",
+            "Map synergies and trade-offs between AMR objectives and Sustainable Development Goals across national action plans."
           ),
-
-          div(class = "guide-subsection-label", "Nodes"),
           div(
-            class = "guide-node-row",
+            class = "g-hero-cta",
+            span(class = "g-hero-start", bs_icon("arrow-down-circle"), " Scroll to get started"),
             div(
-              class = "guide-node-demo guide-node-amr",
-              span("AMR")
-            ),
-            p("Dark teal circles — each represents one of the 5 WHO Global Action Plan objectives (AMR-01 to AMR-05).")
-          ),
-          div(
-            class = "guide-node-row",
-            div(
-              class = "guide-node-demo guide-node-sdg",
-              span("SDG")
-            ),
-            p("Colour-coded squares with SDG icons — one per UN Sustainable Development Goal (SDG-01 to SDG-17).")
-          ),
-
-          div(class = "guide-subsection-label", style = "margin-top:1rem;", "Edge colours"),
-          div(
-            class = "guide-edge-legend",
-            span(class = "guide-edge-chip guide-edge-synergy", "Synergy"),
-            p("Green — the two objectives reinforce each other. Progress on one supports the other.")
-          ),
-          div(
-            class = "guide-edge-legend",
-            span(class = "guide-edge-chip guide-edge-tradeoff", "Trade-off"),
-            p("Red — the two objectives are in tension. Advancing one may constrain the other.")
-          ),
-          div(
-            class = "guide-edge-legend",
-            span(class = "guide-edge-chip guide-edge-mixed", "Mixed"),
-            p("Amber — the relationship is context-dependent or has both reinforcing and conflicting elements.")
-          ),
-
-          div(class = "guide-subsection-label", style = "margin-top:1rem;", "Line styles"),
-          tags$ul(
-            class = "guide-line-list",
-            tags$li(tags$strong("Solid line: "), "direct interaction — the two objectives are explicitly linked in the policy document."),
-            tags$li(tags$strong("Dashed line: "), "indirect interaction — the connection is mediated through a third factor or mechanism."),
-            tags$li(tags$strong("Double arrow: "), "bidirectional — both objectives influence each other.")
-          )
-        ),
-
-        # Right: policy layers
-        div(
-          class = "data-card guide-section-card",
-          div(
-            class = "guide-section-header",
-            bs_icon("layers"),
-            h4("Policy layers explained")
-          ),
-          p(
-            class = "guide-section-intro",
-            "Every interaction record is tagged to a policy layer.",
-            "Use the ", tags$strong("Policy layer"), " dropdown in the network toolbar to switch views."
-          ),
-          div(
-            class = "guide-layer-block",
-            div(class = "guide-layer-badge guide-layer-obj", "Objective"),
-            div(
-              class = "guide-layer-desc",
-              p(tags$strong("Strategic objectives layer")),
-              p("Shows how the high-level goals stated in AMR national action plans and SDG frameworks align, conflict, or interact at a conceptual level. Best for understanding the overall policy architecture.")
-            )
-          ),
-          div(
-            class = "guide-layer-block",
-            div(class = "guide-layer-badge guide-layer-impl", "Implementation"),
-            div(
-              class = "guide-layer-desc",
-              p(tags$strong("Implementation measures layer")),
-              p("Shows how concrete interventions, delivery mechanisms, institutions, and operational actions interact in practice. Captures on-the-ground realities and resource tensions.")
-            )
-          ),
-          div(
-            class = "guide-layer-block",
-            div(class = "guide-layer-badge guide-layer-all", "All layers"),
-            div(
-              class = "guide-layer-desc",
-              p(tags$strong("Combined view")),
-              p("Merges both layers into a single network. Useful for a full picture, but can be denser and harder to interpret. Start with a single layer and switch to All layers when you want full coverage.")
-            )
-          ),
-
-          div(class = "guide-subsection-label", style = "margin-top:1.2rem;", "Interaction families"),
-          tags$ul(
-            class = "guide-line-list",
-            tags$li(tags$strong("AMR–AMR: "), "interactions between two different AMR strategic objectives (internal trade-offs or co-benefits within the AMR agenda)."),
-            tags$li(tags$strong("SDG–SDG: "), "interactions between two Sustainable Development Goals."),
-            tags$li(tags$strong("AMR–SDG: "), "cross-framework interactions between an AMR objective and an SDG — the primary focus of this tool.")
-          )
-        )
-      ),
-
-      # ── How to use (step-by-step) ──────────────────────────────────────
-      div(
-        class = "data-card guide-section-card guide-steps-card",
-        div(
-          class = "guide-section-header",
-          bs_icon("play-circle"),
-          h4("How to use the app — step by step")
-        ),
-        div(
-          class = "guide-steps",
-          div(
-            class = "guide-step",
-            div(class = "guide-step-num", "1"),
-            div(
-              class = "guide-step-body",
-              tags$strong("Open Policy Explorer"),
-              p("The default landing tab. The network and metrics are pre-loaded with all countries and interaction types.")
-            )
-          ),
-          div(
-            class = "guide-step",
-            div(class = "guide-step-num", "2"),
-            div(
-              class = "guide-step-body",
-              tags$strong("Select a country or set of countries"),
-              p("Use the ", tags$strong("Country / NAP context"), " filter in the left sidebar. Start with a single country to keep the network readable.")
-            )
-          ),
-          div(
-            class = "guide-step",
-            div(class = "guide-step-num", "3"),
-            div(
-              class = "guide-step-body",
-              tags$strong("Choose a policy layer"),
-              p("Use the ", tags$strong("Policy layer"), " dropdown above the network. ", tags$em("Objective"), " shows strategic intent; ", tags$em("Implementation"), " shows operational practice.")
-            )
-          ),
-          div(
-            class = "guide-step",
-            div(class = "guide-step-num", "4"),
-            div(
-              class = "guide-step-body",
-              tags$strong("Narrow by interaction type, theme, or effect"),
-              p("Use the sidebar filters to focus on specific interaction families, policy themes (e.g. Agriculture, Human Health), or effect types (synergy, trade-off, mixed).")
-            )
-          ),
-          div(
-            class = "guide-step",
-            div(class = "guide-step-num", "5"),
-            div(
-              class = "guide-step-body",
-              tags$strong("Click Apply filters"),
-              p("Filters are applied when you press ", tags$strong("Apply filters"), " at the bottom of the sidebar. The network and metrics update immediately.")
-            )
-          ),
-          div(
-            class = "guide-step",
-            div(class = "guide-step-num", "6"),
-            div(
-              class = "guide-step-body",
-              tags$strong("Use Focus objective to zoom in"),
-              p("Select a specific AMR objective or SDG from the ", tags$strong("Focus objective"), " dropdown to centre the network on that node and highlight its direct connections.")
-            )
-          ),
-          div(
-            class = "guide-step",
-            div(class = "guide-step-num", "7"),
-            div(
-              class = "guide-step-body",
-              tags$strong("Click a node to open the details drawer"),
-              p("Clicking any node opens a side panel on the right showing interaction counts, top country contexts, policy tensions, and related interactions for that objective.")
-            )
-          ),
-          div(
-            class = "guide-step",
-            div(class = "guide-step-num", "8"),
-            div(
-              class = "guide-step-body",
-              tags$strong("Review the evidence table"),
-              p("Scroll below the network to see the full evidence record for each filtered interaction — including policy objectives extracted from source documents, specific actions, and original references.")
+              class = "g-hero-pills",
+              span(class = "g-pill g-pill-amr",   bs_icon("circle-fill"), " AMR \u2194 AMR"),
+              span(class = "g-pill g-pill-sdg",   bs_icon("square-fill"), " SDG \u2194 SDG"),
+              span(class = "g-pill g-pill-cross", bs_icon("shuffle"),     " AMR \u2194 SDG")
             )
           )
         )
       ),
 
-      # ── Interpretation + Workflow ──────────────────────────────────────
+      # ── What you can do — feature highlights ──────────────────────────
       div(
-        class = "guide-two-col",
-
+        class = "g-features",
         div(
-          class = "data-card guide-section-card",
-          div(
-            class = "guide-section-header",
-            bs_icon("exclamation-triangle"),
-            h4("Interpreting results carefully")
-          ),
-          div(
-            class = "guide-callout guide-callout-warning",
-            bs_icon("info-circle"),
-            span("This tool is designed for exploration, not final conclusions. Always cross-check the interaction summaries and source references in the table.")
-          ),
-          tags$ul(
-            class = "guide-line-list",
-            tags$li("A visible edge means at least one record in the dataset links those two objectives under current filters — it does not imply a universal or causal relationship."),
-            tags$li("The same objective pair may show different effects depending on the country, layer, or theme. Use filters to isolate specific contexts."),
-            tags$li("Policy tension labels are drawn from document text and represent the interpretation at time of analysis. They should be read alongside the full interaction summary."),
-            tags$li("Bidirectional interactions reinforce each other, but the strength of each direction may differ — inspect the individual records in the table."),
-            tags$li("Absence of an edge does not mean no interaction exists — it may simply not be captured in the current dataset.")
-          )
+          class = "g-feature",
+          div(class = "g-feature-icon g-feature-icon-1", bs_icon("diagram-3-fill")),
+          h3("Network View"),
+          p("Interactive visual map. Nodes are objectives; edges show how they relate. Click, zoom, and drag.")
         ),
+        div(
+          class = "g-feature",
+          div(class = "g-feature-icon g-feature-icon-2", bs_icon("speedometer2")),
+          h3("Live Metrics"),
+          p("Synergy, trade-off, and mixed counts update instantly as you filter.")
+        ),
+        div(
+          class = "g-feature",
+          div(class = "g-feature-icon g-feature-icon-3", bs_icon("table")),
+          h3("Evidence Table"),
+          p("Full records: country, layer, effect, source documents, and extracted policy text.")
+        ),
+        div(
+          class = "g-feature",
+          div(class = "g-feature-icon g-feature-icon-4", bs_icon("journal-bookmark-fill")),
+          h3("Objective Dictionary"),
+          p("Reference for all 5 WHO GAP AMR objectives and 17 UN SDGs with full descriptions.")
+        )
+      ),
+
+      # ── Quick Start — 5-step onboarding ───────────────────────────────
+      div(
+        class = "g-section",
+        div(class = "g-section-label", bs_icon("rocket-takeoff-fill"), " Quick Start"),
+        h2(class = "g-section-title", "Get exploring in five steps"),
+        p(class = "g-section-desc", "Follow this guided sequence the first time you use the app."),
 
         div(
-          class = "data-card guide-section-card",
+          class = "g-timeline",
+
           div(
-            class = "guide-section-header",
-            bs_icon("lightning"),
-            h4("Suggested workflow")
+            class = "g-tl-item",
+            div(class = "g-tl-badge", "1"),
+            div(class = "g-tl-connector"),
+            div(
+              class = "g-tl-card",
+              div(class = "g-tl-card-icon", bs_icon("geo-alt-fill")),
+              div(
+                class = "g-tl-card-body",
+                h4("Choose a country"),
+                p("Use the ", tags$strong("Country / NAP context"), " filter. Start with one country to keep the network readable.")
+              )
+            )
           ),
-          p(
-            class = "guide-section-intro",
-            "A recommended sequence for first-time exploration:"
-          ),
+
           div(
-            class = "guide-workflow",
-            div(class = "guide-workflow-step",
-              div(class = "guide-workflow-icon", bs_icon("geo-alt")),
-              div(class = "guide-workflow-text", tags$strong("1. Pick a country"), p("Start focused — one country makes the network manageable."))
-            ),
-            div(class = "guide-workflow-arrow", bs_icon("arrow-down")),
-            div(class = "guide-workflow-step",
-              div(class = "guide-workflow-icon", bs_icon("layers")),
-              div(class = "guide-workflow-text", tags$strong("2. Select Objective layer"), p("Understand strategic alignment before moving to implementation."))
-            ),
-            div(class = "guide-workflow-arrow", bs_icon("arrow-down")),
-            div(class = "guide-workflow-step",
-              div(class = "guide-workflow-icon", bs_icon("diagram-3")),
-              div(class = "guide-workflow-text", tags$strong("3. Focus on one objective"), p("Use the Focus dropdown to zoom into the edges of interest."))
-            ),
-            div(class = "guide-workflow-arrow", bs_icon("arrow-down")),
-            div(class = "guide-workflow-step",
-              div(class = "guide-workflow-icon", bs_icon("table")),
-              div(class = "guide-workflow-text", tags$strong("4. Read the evidence table"), p("Cross-check the network with source documents and policy summaries."))
-            ),
-            div(class = "guide-workflow-arrow", bs_icon("arrow-down")),
-            div(class = "guide-workflow-step",
-              div(class = "guide-workflow-icon", bs_icon("layers-half")),
-              div(class = "guide-workflow-text", tags$strong("5. Switch to Implementation"), p("See if strategic alignment holds at the operational level."))
+            class = "g-tl-item",
+            div(class = "g-tl-badge", "2"),
+            div(class = "g-tl-connector"),
+            div(
+              class = "g-tl-card",
+              div(class = "g-tl-card-icon", bs_icon("layers-fill")),
+              div(
+                class = "g-tl-card-body",
+                h4("Select a policy layer"),
+                p(tags$em("Objective"), " shows strategic intent. ", tags$em("Implementation"), " shows operational practice. Or view both together.")
+              )
+            )
+          ),
+
+          div(
+            class = "g-tl-item",
+            div(class = "g-tl-badge", "3"),
+            div(class = "g-tl-connector"),
+            div(
+              class = "g-tl-card",
+              div(class = "g-tl-card-icon", bs_icon("funnel-fill")),
+              div(
+                class = "g-tl-card-body",
+                h4("Filter by type, theme, and effect"),
+                p("Narrow to specific interaction families, policy themes, or effect types, then press ", tags$strong("Apply filters"), ".")
+              )
+            )
+          ),
+
+          div(
+            class = "g-tl-item",
+            div(class = "g-tl-badge", "4"),
+            div(class = "g-tl-connector"),
+            div(
+              class = "g-tl-card",
+              div(class = "g-tl-card-icon", bs_icon("diagram-3-fill")),
+              div(
+                class = "g-tl-card-body",
+                h4("Read the network"),
+                p("Click any node to open its detail drawer. Use ", tags$strong("Focus objective"), " to spotlight one node and its connections.")
+              )
+            )
+          ),
+
+          div(
+            class = "g-tl-item",
+            div(class = "g-tl-badge", "5"),
+            div(
+              class = "g-tl-card",
+              div(class = "g-tl-card-icon", bs_icon("table")),
+              div(
+                class = "g-tl-card-body",
+                h4("Inspect the evidence table"),
+                p("Scroll below the network to see interaction details: source documents, policy summaries, and original references.")
+              )
             )
           )
         )
       ),
 
-      # ── Quick tips ─────────────────────────────────────────────────────
+      # ── Visual Legend ─────────────────────────────────────────────────
       div(
-        class = "data-card guide-section-card guide-tips-card",
+        class = "g-section",
+        div(class = "g-section-label", bs_icon("palette-fill"), " Visual Legend"),
+        h2(class = "g-section-title", "How to read the network"),
+        p(class = "g-section-desc", "Every visual element in the network carries meaning. Here's your decoder ring."),
+
         div(
-          class = "guide-section-header",
-          bs_icon("lightbulb"),
-          h4("Quick tips")
+          class = "g-legend-grid",
+
+          # Nodes column
+          div(
+            class = "g-legend-panel",
+            h3(class = "g-legend-panel-title", "Nodes"),
+            div(
+              class = "g-legend-item",
+              div(class = "g-legend-swatch g-swatch-amr", "AMR"),
+              div(
+                class = "g-legend-detail",
+                tags$strong("AMR Objectives"),
+                p("Dark teal circles. Each represents one of the 5 WHO Global Action Plan objectives (AMR-01 to AMR-05).")
+              )
+            ),
+            div(
+              class = "g-legend-item",
+              div(class = "g-legend-swatch g-swatch-sdg", "SDG"),
+              div(
+                class = "g-legend-detail",
+                tags$strong("SDG Goals"),
+                p("Coloured squares. One per UN Sustainable Development Goal (SDG-01 to SDG-17).")
+              )
+            )
+          ),
+
+          # Edge colours column
+          div(
+            class = "g-legend-panel",
+            h3(class = "g-legend-panel-title", "Edge Colours"),
+            div(
+              class = "g-legend-item",
+              div(class = "g-legend-line g-line-synergy"),
+              div(
+                class = "g-legend-detail",
+                tags$strong("Synergy"),
+                p("The two objectives reinforce each other.")
+              )
+            ),
+            div(
+              class = "g-legend-item",
+              div(class = "g-legend-line g-line-tradeoff"),
+              div(
+                class = "g-legend-detail",
+                tags$strong("Trade-off"),
+                p("The two objectives are in tension.")
+              )
+            ),
+            div(
+              class = "g-legend-item",
+              div(class = "g-legend-line g-line-mixed"),
+              div(
+                class = "g-legend-detail",
+                tags$strong("Mixed"),
+                p("Context-dependent; both reinforcing and conflicting.")
+              )
+            )
+          ),
+
+          # Line styles column
+          div(
+            class = "g-legend-panel",
+            h3(class = "g-legend-panel-title", "Line Styles"),
+            div(
+              class = "g-legend-item",
+              div(class = "g-legend-linestyle",
+                tags$svg(width = "48", height = "12", viewBox = "0 0 48 12",
+                  tags$line(x1 = "0", y1 = "6", x2 = "48", y2 = "6",
+                    stroke = "#64748b", `stroke-width` = "2.5")
+                )
+              ),
+              div(
+                class = "g-legend-detail",
+                tags$strong("Solid"),
+                p("Direct interaction \u2014 explicitly linked in the policy document.")
+              )
+            ),
+            div(
+              class = "g-legend-item",
+              div(class = "g-legend-linestyle",
+                tags$svg(width = "48", height = "12", viewBox = "0 0 48 12",
+                  tags$line(x1 = "0", y1 = "6", x2 = "48", y2 = "6",
+                    stroke = "#64748b", `stroke-width` = "2.5", `stroke-dasharray` = "6 4")
+                )
+              ),
+              div(
+                class = "g-legend-detail",
+                tags$strong("Dashed"),
+                p("Indirect \u2014 mediated through a third factor.")
+              )
+            ),
+            div(
+              class = "g-legend-item",
+              div(class = "g-legend-linestyle",
+                tags$svg(width = "48", height = "12", viewBox = "0 0 48 12",
+                  tags$line(x1 = "4", y1 = "6", x2 = "44", y2 = "6",
+                    stroke = "#64748b", `stroke-width` = "2.5",
+                    `marker-start` = "url(#arrowL)", `marker-end` = "url(#arrowR)"),
+                  tags$defs(
+                    tags$marker(id = "arrowR", markerWidth = "6", markerHeight = "6",
+                      refX = "5", refY = "3", orient = "auto",
+                      tags$path(d = "M0,0 L6,3 L0,6", fill = "#64748b")),
+                    tags$marker(id = "arrowL", markerWidth = "6", markerHeight = "6",
+                      refX = "1", refY = "3", orient = "auto",
+                      tags$path(d = "M6,0 L0,3 L6,6", fill = "#64748b"))
+                  )
+                )
+              ),
+              div(
+                class = "g-legend-detail",
+                tags$strong("Bidirectional"),
+                p("Both objectives influence each other.")
+              )
+            )
+          )
+        )
+      ),
+
+      # ── Policy Layers — accordion-style ────────────────────────────────
+      div(
+        class = "g-section",
+        div(class = "g-section-label", bs_icon("stack"), " Reference"),
+        h2(class = "g-section-title", "Understanding policy layers"),
+        p(class = "g-section-desc", "Every interaction record is tagged to a policy layer. Switch layers with the dropdown above the network."),
+
+        div(
+          class = "g-layers",
+
+          div(
+            class = "g-layer-card g-layer-obj",
+            div(class = "g-layer-marker"),
+            div(
+              class = "g-layer-content",
+              div(class = "g-layer-header",
+                span(class = "g-layer-tag g-tag-obj", "Objective"),
+                h4("Strategic objectives layer")
+              ),
+              p("How high-level goals in AMR national action plans and SDG frameworks align, conflict, or interact at a conceptual level. Best for understanding overall policy architecture.")
+            )
+          ),
+
+          div(
+            class = "g-layer-card g-layer-impl",
+            div(class = "g-layer-marker"),
+            div(
+              class = "g-layer-content",
+              div(class = "g-layer-header",
+                span(class = "g-layer-tag g-tag-impl", "Implementation"),
+                h4("Implementation measures layer")
+              ),
+              p("How concrete interventions, institutions, and operational actions interact in practice. Captures on-the-ground realities and resource tensions.")
+            )
+          ),
+
+          div(
+            class = "g-layer-card g-layer-all",
+            div(class = "g-layer-marker"),
+            div(
+              class = "g-layer-content",
+              div(class = "g-layer-header",
+                span(class = "g-layer-tag g-tag-all", "All layers"),
+                h4("Combined view")
+              ),
+              p("Merges both layers into one network. Useful for full coverage but can be denser. Start with a single layer first.")
+            )
+          )
         ),
+
         div(
-          class = "guide-tips-grid",
-          div(class = "guide-tip",
-            div(class = "guide-tip-icon", bs_icon("funnel")),
-            div(class = "guide-tip-text",
-              tags$strong("Combine filters for precision"),
-              p("Use country + theme + effect filters together for highly focused views. The metric counters update in real time.")
+          class = "g-info-banner",
+          bs_icon("info-circle-fill"),
+          div(
+            tags$strong("Interaction families"),
+            p(
+              tags$span(class = "g-inline-chip g-chip-amr", "AMR\u2013AMR"), " internal co-benefits or trade-offs within AMR. ",
+              tags$span(class = "g-inline-chip g-chip-sdg", "SDG\u2013SDG"), " interactions between SDGs. ",
+              tags$span(class = "g-inline-chip g-chip-cross", "AMR\u2013SDG"), " cross-framework interactions \u2014 the primary focus of this tool."
             )
+          )
+        )
+      ),
+
+      # ── Interpreting results — callout section ─────────────────────────
+      div(
+        class = "g-section",
+        div(class = "g-section-label", bs_icon("shield-check"), " Interpretation"),
+        h2(class = "g-section-title", "Interpreting results carefully"),
+        p(class = "g-section-desc", "This tool is for exploration, not final conclusions. Keep these principles in mind."),
+
+        div(
+          class = "g-caution-banner",
+          div(class = "g-caution-icon", bs_icon("exclamation-triangle-fill")),
+          p("Always cross-check interaction summaries and source references in the evidence table before drawing conclusions.")
+        ),
+
+        div(
+          class = "g-principles",
+          div(
+            class = "g-principle",
+            div(class = "g-principle-num", "01"),
+            p("A visible edge means at least one record links those objectives under current filters \u2014 it does not imply a universal or causal relationship.")
           ),
-          div(class = "guide-tip",
-            div(class = "guide-tip-icon", bs_icon("search")),
-            div(class = "guide-tip-text",
-              tags$strong("Use text search"),
-              p("The Advanced filters section has a free-text search that matches across policy summaries, tensions, countries, and references.")
-            )
+          div(
+            class = "g-principle",
+            div(class = "g-principle-num", "02"),
+            p("The same pair may show different effects by country, layer, or theme. Use filters to isolate contexts.")
           ),
-          div(class = "guide-tip",
-            div(class = "guide-tip-icon", bs_icon("download")),
-            div(class = "guide-tip-text",
-              tags$strong("Download your filtered view"),
-              p("Use the ", tags$strong("Download filtered"), " button in the sidebar to export the current filtered data as a CSV for offline analysis.")
-            )
+          div(
+            class = "g-principle",
+            div(class = "g-principle-num", "03"),
+            p("Policy tension labels reflect the interpretation at time of analysis. Read them alongside the full interaction summary.")
           ),
-          div(class = "guide-tip",
-            div(class = "guide-tip-icon", bs_icon("arrows-move")),
-            div(class = "guide-tip-text",
-              tags$strong("Rearrange the network"),
-              p("Drag nodes to reposition them. Use the navigation buttons (top-right of the network) to zoom, fit, or reset the layout.")
-            )
+          div(
+            class = "g-principle",
+            div(class = "g-principle-num", "04"),
+            p("Bidirectional edges reinforce each other, but each direction may differ in strength \u2014 check the individual records.")
           ),
-          div(class = "guide-tip",
-            div(class = "guide-tip-icon", bs_icon("toggle-on")),
-            div(class = "guide-tip-text",
-              tags$strong("Toggle bidirectional filter"),
-              p("Enable Bidirectional only in Advanced filters to see interactions where both objectives mutually reinforce or conflict with each other.")
-            )
+          div(
+            class = "g-principle",
+            div(class = "g-principle-num", "05"),
+            p("Absence of an edge does not mean no interaction exists \u2014 it may simply not be captured in the current dataset.")
+          )
+        )
+      ),
+
+      # ── Tips & FAQ ────────────────────────────────────────────────────
+      div(
+        class = "g-section g-section-last",
+        div(class = "g-section-label", bs_icon("lightbulb-fill"), " Tips"),
+        h2(class = "g-section-title", "Power user tips"),
+
+        div(
+          class = "g-tips",
+          div(
+            class = "g-tip-card",
+            div(class = "g-tip-icon-wrap g-tip-c1", bs_icon("funnel-fill")),
+            tags$strong("Combine filters"),
+            p("Country + theme + effect together for highly focused views.")
           ),
-          div(class = "guide-tip",
-            div(class = "guide-tip-icon", bs_icon("book-half")),
-            div(class = "guide-tip-text",
-              tags$strong("Check the Objective Dictionary"),
-              p("If an AMR or SDG code is unfamiliar, switch to the Objective Dictionary tab for full names and descriptions of all 22 objectives.")
-            )
+          div(
+            class = "g-tip-card",
+            div(class = "g-tip-icon-wrap g-tip-c2", bs_icon("search")),
+            tags$strong("Free-text search"),
+            p("Matches across summaries, tensions, countries, and references.")
+          ),
+          div(
+            class = "g-tip-card",
+            div(class = "g-tip-icon-wrap g-tip-c3", bs_icon("download")),
+            tags$strong("Export CSV"),
+            p("Download your filtered view for offline analysis.")
+          ),
+          div(
+            class = "g-tip-card",
+            div(class = "g-tip-icon-wrap g-tip-c4", bs_icon("hand-index-thumb")),
+            tags$strong("Drag nodes"),
+            p("Reposition nodes freely; use nav buttons to zoom or reset.")
+          ),
+          div(
+            class = "g-tip-card",
+            div(class = "g-tip-icon-wrap g-tip-c5", bs_icon("arrow-left-right")),
+            tags$strong("Bidirectional only"),
+            p("Toggle in Advanced filters for mutual-influence edges.")
+          ),
+          div(
+            class = "g-tip-card",
+            div(class = "g-tip-icon-wrap g-tip-c6", bs_icon("book-half")),
+            tags$strong("Objective Dictionary"),
+            p("Look up full names and descriptions for all 22 objectives.")
           )
         )
       )
