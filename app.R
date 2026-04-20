@@ -113,8 +113,10 @@ if (!"evidence_level" %in% names(interactions)) {
 }
 # Ensure new enriched policy-text columns exist (filled NA if absent)
 for (.col in c(
-  "policy_strategic_objective_1", "policy_strategic_objective_2",
-  "policy_specific_actions_1",    "policy_specific_actions_2"
+  "policy_strategic_objective_1",
+  "policy_strategic_objective_2",
+  "policy_specific_actions_1",
+  "policy_specific_actions_2"
 )) {
   if (!.col %in% names(interactions)) interactions[[.col]] <- NA_character_
 }
@@ -169,10 +171,22 @@ interactions_enriched <- interactions %>%
         policy_tension,
         evidence_level,
         reference,
-        if_else(is.na(policy_strategic_objective_1), "", policy_strategic_objective_1),
-        if_else(is.na(policy_strategic_objective_2), "", policy_strategic_objective_2),
-        if_else(is.na(policy_specific_actions_1),    "", policy_specific_actions_1),
-        if_else(is.na(policy_specific_actions_2),    "", policy_specific_actions_2)
+        if_else(
+          is.na(policy_strategic_objective_1),
+          "",
+          policy_strategic_objective_1
+        ),
+        if_else(
+          is.na(policy_strategic_objective_2),
+          "",
+          policy_strategic_objective_2
+        ),
+        if_else(
+          is.na(policy_specific_actions_1),
+          "",
+          policy_specific_actions_1
+        ),
+        if_else(is.na(policy_specific_actions_2), "", policy_specific_actions_2)
       )
     )
   )
@@ -347,12 +361,12 @@ ui <- page_navbar(
     ),
     div(
       class = "app-brand-text",
-      tags$span(class = "app-brand-kicker", "Policy Intelligence"),
-      tags$span(class = "app-brand-title", "Policy Tension Explorer")
+      tags$span(class = "app-brand-kicker", "BRIDGE-ABR"),
+      tags$span(class = "app-brand-title", "ABR Goal Conflict Explorer")
     )
   ),
   id = "main_nav",
-  window_title = "Policy Tension Explorer",
+  window_title = "ABR Goal Conflict Explorer",
   navbar_options = navbar_options(collapsible = TRUE),
   theme = bs_theme(
     version = 5,
@@ -622,9 +636,14 @@ ui <- page_navbar(
         class = "dict-hero",
         div(
           class = "dict-hero-inner",
-          div(class = "dict-hero-eyebrow", bs_icon("journal-bookmark-fill"), " Reference"),
+          div(
+            class = "dict-hero-eyebrow",
+            bs_icon("journal-bookmark-fill"),
+            " Reference"
+          ),
           h1(class = "dict-hero-title", "Objective Dictionary"),
-          p(class = "dict-hero-subtitle",
+          p(
+            class = "dict-hero-subtitle",
             "A complete reference for all 5 WHO Global Action Plan AMR objectives and 17 UN Sustainable Development Goals used in this tool."
           )
         )
@@ -659,10 +678,17 @@ ui <- page_navbar(
         div(
           class = "dict-section-header",
           div(
-            div(class = "dict-section-label", bs_icon("list-columns-reverse"), " Objectives"),
+            div(
+              class = "dict-section-label",
+              bs_icon("list-columns-reverse"),
+              " Objectives"
+            ),
             h2(class = "dict-section-title", "Full objective dictionary")
           ),
-          p(class = "dict-section-desc", "Browse all AMR and SDG objectives with their codes, framework source, and full descriptions.")
+          p(
+            class = "dict-section-desc",
+            "Browse all AMR and SDG objectives with their codes, framework source, and full descriptions."
+          )
         ),
         div(
           class = "dict-table-card",
@@ -680,10 +706,20 @@ ui <- page_navbar(
         div(
           class = "dict-section-header",
           div(
-            div(class = "dict-section-label", bs_icon("bar-chart-line-fill"), " Summary"),
-            h2(class = "dict-section-title", "Interaction counts by country and effect")
+            div(
+              class = "dict-section-label",
+              bs_icon("bar-chart-line-fill"),
+              " Summary"
+            ),
+            h2(
+              class = "dict-section-title",
+              "Interaction counts by country and effect"
+            )
           ),
-          p(class = "dict-section-desc", "Aggregated counts of interactions across countries, types, and effect categories in the full dataset.")
+          p(
+            class = "dict-section-desc",
+            "Aggregated counts of interactions across countries, types, and effect categories in the full dataset."
+          )
         ),
         div(
           class = "dict-table-card",
@@ -707,19 +743,43 @@ ui <- page_navbar(
         class = "g-hero",
         div(
           class = "g-hero-inner",
-          div(class = "g-hero-eyebrow", bs_icon("globe2"), " BRIDGE-ABR Policy Intelligence"),
-          h1(class = "g-hero-title", "Welcome to the Policy Tension Explorer"),
-          p(class = "g-hero-subtitle",
+          div(
+            class = "g-hero-eyebrow",
+            bs_icon("globe2"),
+            " BRIDGE-ABR BRIDGE-ABR"
+          ),
+          h1(
+            class = "g-hero-title",
+            "Welcome to the ABR Goal Conflict Explorer"
+          ),
+          p(
+            class = "g-hero-subtitle",
             "Map synergies and trade-offs between AMR objectives and Sustainable Development Goals across national action plans."
           ),
           div(
             class = "g-hero-cta",
-            span(class = "g-hero-start", bs_icon("arrow-down-circle"), " Scroll to get started"),
+            span(
+              class = "g-hero-start",
+              bs_icon("arrow-down-circle"),
+              " Scroll to get started"
+            ),
             div(
               class = "g-hero-pills",
-              span(class = "g-pill g-pill-amr",   bs_icon("circle-fill"), " AMR \u2194 AMR"),
-              span(class = "g-pill g-pill-sdg",   bs_icon("square-fill"), " SDG \u2194 SDG"),
-              span(class = "g-pill g-pill-cross", bs_icon("shuffle"),     " AMR \u2194 SDG")
+              span(
+                class = "g-pill g-pill-amr",
+                bs_icon("circle-fill"),
+                " AMR \u2194 AMR"
+              ),
+              span(
+                class = "g-pill g-pill-sdg",
+                bs_icon("square-fill"),
+                " SDG \u2194 SDG"
+              ),
+              span(
+                class = "g-pill g-pill-cross",
+                bs_icon("shuffle"),
+                " AMR \u2194 SDG"
+              )
             )
           )
         )
@@ -730,36 +790,60 @@ ui <- page_navbar(
         class = "g-features",
         div(
           class = "g-feature",
-          div(class = "g-feature-icon g-feature-icon-1", bs_icon("diagram-3-fill")),
+          div(
+            class = "g-feature-icon g-feature-icon-1",
+            bs_icon("diagram-3-fill")
+          ),
           h3("Network View"),
-          p("Interactive visual map. Nodes are objectives; edges show how they relate. Click, zoom, and drag.")
+          p(
+            "Interactive visual map. Nodes are objectives; edges show how they relate. Click, zoom, and drag."
+          )
         ),
         div(
           class = "g-feature",
-          div(class = "g-feature-icon g-feature-icon-2", bs_icon("speedometer2")),
+          div(
+            class = "g-feature-icon g-feature-icon-2",
+            bs_icon("speedometer2")
+          ),
           h3("Live Metrics"),
-          p("Synergy, trade-off, and mixed counts update instantly as you filter.")
+          p(
+            "Synergy, trade-off, and mixed counts update instantly as you filter."
+          )
         ),
         div(
           class = "g-feature",
           div(class = "g-feature-icon g-feature-icon-3", bs_icon("table")),
           h3("Evidence Table"),
-          p("Full records: country, layer, effect, source documents, and extracted policy text.")
+          p(
+            "Full records: country, layer, effect, source documents, and extracted policy text."
+          )
         ),
         div(
           class = "g-feature",
-          div(class = "g-feature-icon g-feature-icon-4", bs_icon("journal-bookmark-fill")),
+          div(
+            class = "g-feature-icon g-feature-icon-4",
+            bs_icon("journal-bookmark-fill")
+          ),
           h3("Objective Dictionary"),
-          p("Reference for all 5 WHO GAP AMR objectives and 17 UN SDGs with full descriptions.")
+          p(
+            "Reference for all 5 WHO GAP AMR objectives and 17 UN SDGs with full descriptions."
+          )
         )
       ),
 
       # ── Quick Start — 5-step onboarding ───────────────────────────────
       div(
         class = "g-section",
-        div(class = "g-section-label", bs_icon("rocket-takeoff-fill"), " Quick Start"),
+        div(
+          class = "g-section-label",
+          bs_icon("rocket-takeoff-fill"),
+          " Quick Start"
+        ),
         h2(class = "g-section-title", "Get exploring in five steps"),
-        p(class = "g-section-desc", "Follow this guided sequence the first time you use the app."),
+        p(
+          class = "g-section-desc",
+          "Follow this guided sequence the first time you use the app."
+        ),
 
         div(
           class = "g-timeline",
@@ -774,7 +858,11 @@ ui <- page_navbar(
               div(
                 class = "g-tl-card-body",
                 h4("Choose a country"),
-                p("Use the ", tags$strong("Country / NAP context"), " filter. Start with one country to keep the network readable.")
+                p(
+                  "Use the ",
+                  tags$strong("Country / NAP context"),
+                  " filter. Start with one country to keep the network readable."
+                )
               )
             )
           ),
@@ -789,7 +877,12 @@ ui <- page_navbar(
               div(
                 class = "g-tl-card-body",
                 h4("Select a policy layer"),
-                p(tags$em("Objective"), " shows strategic intent. ", tags$em("Implementation"), " shows operational practice. Or view both together.")
+                p(
+                  tags$em("Objective"),
+                  " shows strategic intent. ",
+                  tags$em("Implementation"),
+                  " shows operational practice. Or view both together."
+                )
               )
             )
           ),
@@ -804,7 +897,11 @@ ui <- page_navbar(
               div(
                 class = "g-tl-card-body",
                 h4("Filter by type, theme, and effect"),
-                p("Narrow to specific interaction families, policy themes, or effect types, then press ", tags$strong("Apply filters"), ".")
+                p(
+                  "Narrow to specific interaction families, policy themes, or effect types, then press ",
+                  tags$strong("Apply filters"),
+                  "."
+                )
               )
             )
           ),
@@ -819,7 +916,11 @@ ui <- page_navbar(
               div(
                 class = "g-tl-card-body",
                 h4("Read the network"),
-                p("Click any node to open its detail drawer. Use ", tags$strong("Focus objective"), " to spotlight one node and its connections.")
+                p(
+                  "Click any node to open its detail drawer. Use ",
+                  tags$strong("Focus objective"),
+                  " to spotlight one node and its connections."
+                )
               )
             )
           ),
@@ -833,7 +934,9 @@ ui <- page_navbar(
               div(
                 class = "g-tl-card-body",
                 h4("Inspect the evidence table"),
-                p("Scroll below the network to see interaction details: source documents, policy summaries, and original references.")
+                p(
+                  "Scroll below the network to see interaction details: source documents, policy summaries, and original references."
+                )
               )
             )
           )
@@ -843,9 +946,16 @@ ui <- page_navbar(
       # ── Visual Legend ─────────────────────────────────────────────────
       div(
         class = "g-section",
-        div(class = "g-section-label", bs_icon("palette-fill"), " Visual Legend"),
+        div(
+          class = "g-section-label",
+          bs_icon("palette-fill"),
+          " Visual Legend"
+        ),
         h2(class = "g-section-title", "How to read the network"),
-        p(class = "g-section-desc", "Every visual element in the network carries meaning. Here's your decoder ring."),
+        p(
+          class = "g-section-desc",
+          "Every visual element in the network carries meaning. Here's your decoder ring."
+        ),
 
         div(
           class = "g-legend-grid",
@@ -860,7 +970,9 @@ ui <- page_navbar(
               div(
                 class = "g-legend-detail",
                 tags$strong("AMR Objectives"),
-                p("Dark teal circles. Each represents one of the 5 WHO Global Action Plan objectives (AMR-01 to AMR-05).")
+                p(
+                  "Dark teal circles. Each represents one of the 5 WHO Global Action Plan objectives (AMR-01 to AMR-05)."
+                )
               )
             ),
             div(
@@ -869,7 +981,9 @@ ui <- page_navbar(
               div(
                 class = "g-legend-detail",
                 tags$strong("SDG Goals"),
-                p("Coloured squares. One per UN Sustainable Development Goal (SDG-01 to SDG-17).")
+                p(
+                  "Coloured squares. One per UN Sustainable Development Goal (SDG-01 to SDG-17)."
+                )
               )
             )
           ),
@@ -913,24 +1027,47 @@ ui <- page_navbar(
             h3(class = "g-legend-panel-title", "Line Styles"),
             div(
               class = "g-legend-item",
-              div(class = "g-legend-linestyle",
-                tags$svg(width = "48", height = "12", viewBox = "0 0 48 12",
-                  tags$line(x1 = "0", y1 = "6", x2 = "48", y2 = "6",
-                    stroke = "#64748b", `stroke-width` = "2.5")
+              div(
+                class = "g-legend-linestyle",
+                tags$svg(
+                  width = "48",
+                  height = "12",
+                  viewBox = "0 0 48 12",
+                  tags$line(
+                    x1 = "0",
+                    y1 = "6",
+                    x2 = "48",
+                    y2 = "6",
+                    stroke = "#64748b",
+                    `stroke-width` = "2.5"
+                  )
                 )
               ),
               div(
                 class = "g-legend-detail",
                 tags$strong("Solid"),
-                p("Direct interaction \u2014 explicitly linked in the policy document.")
+                p(
+                  "Direct interaction \u2014 explicitly linked in the policy document."
+                )
               )
             ),
             div(
               class = "g-legend-item",
-              div(class = "g-legend-linestyle",
-                tags$svg(width = "48", height = "12", viewBox = "0 0 48 12",
-                  tags$line(x1 = "0", y1 = "6", x2 = "48", y2 = "6",
-                    stroke = "#64748b", `stroke-width` = "2.5", `stroke-dasharray` = "6 4")
+              div(
+                class = "g-legend-linestyle",
+                tags$svg(
+                  width = "48",
+                  height = "12",
+                  viewBox = "0 0 48 12",
+                  tags$line(
+                    x1 = "0",
+                    y1 = "6",
+                    x2 = "48",
+                    y2 = "6",
+                    stroke = "#64748b",
+                    `stroke-width` = "2.5",
+                    `stroke-dasharray` = "6 4"
+                  )
                 )
               ),
               div(
@@ -941,18 +1078,41 @@ ui <- page_navbar(
             ),
             div(
               class = "g-legend-item",
-              div(class = "g-legend-linestyle",
-                tags$svg(width = "48", height = "12", viewBox = "0 0 48 12",
-                  tags$line(x1 = "4", y1 = "6", x2 = "44", y2 = "6",
-                    stroke = "#64748b", `stroke-width` = "2.5",
-                    `marker-start` = "url(#arrowL)", `marker-end` = "url(#arrowR)"),
+              div(
+                class = "g-legend-linestyle",
+                tags$svg(
+                  width = "48",
+                  height = "12",
+                  viewBox = "0 0 48 12",
+                  tags$line(
+                    x1 = "4",
+                    y1 = "6",
+                    x2 = "44",
+                    y2 = "6",
+                    stroke = "#64748b",
+                    `stroke-width` = "2.5",
+                    `marker-start` = "url(#arrowL)",
+                    `marker-end` = "url(#arrowR)"
+                  ),
                   tags$defs(
-                    tags$marker(id = "arrowR", markerWidth = "6", markerHeight = "6",
-                      refX = "5", refY = "3", orient = "auto",
-                      tags$path(d = "M0,0 L6,3 L0,6", fill = "#64748b")),
-                    tags$marker(id = "arrowL", markerWidth = "6", markerHeight = "6",
-                      refX = "1", refY = "3", orient = "auto",
-                      tags$path(d = "M6,0 L0,3 L6,6", fill = "#64748b"))
+                    tags$marker(
+                      id = "arrowR",
+                      markerWidth = "6",
+                      markerHeight = "6",
+                      refX = "5",
+                      refY = "3",
+                      orient = "auto",
+                      tags$path(d = "M0,0 L6,3 L0,6", fill = "#64748b")
+                    ),
+                    tags$marker(
+                      id = "arrowL",
+                      markerWidth = "6",
+                      markerHeight = "6",
+                      refX = "1",
+                      refY = "3",
+                      orient = "auto",
+                      tags$path(d = "M6,0 L0,3 L6,6", fill = "#64748b")
+                    )
                   )
                 )
               ),
@@ -971,7 +1131,10 @@ ui <- page_navbar(
         class = "g-section",
         div(class = "g-section-label", bs_icon("stack"), " Reference"),
         h2(class = "g-section-title", "Understanding policy layers"),
-        p(class = "g-section-desc", "Every interaction record is tagged to a policy layer. Switch layers with the dropdown above the network."),
+        p(
+          class = "g-section-desc",
+          "Every interaction record is tagged to a policy layer. Switch layers with the dropdown above the network."
+        ),
 
         div(
           class = "g-layers",
@@ -981,11 +1144,14 @@ ui <- page_navbar(
             div(class = "g-layer-marker"),
             div(
               class = "g-layer-content",
-              div(class = "g-layer-header",
+              div(
+                class = "g-layer-header",
                 span(class = "g-layer-tag g-tag-obj", "Objective"),
                 h4("Strategic objectives layer")
               ),
-              p("How high-level goals in AMR national action plans and SDG frameworks align, conflict, or interact at a conceptual level. Best for understanding overall policy architecture.")
+              p(
+                "How high-level goals in AMR national action plans and SDG frameworks align, conflict, or interact at a conceptual level. Best for understanding overall policy architecture."
+              )
             )
           ),
 
@@ -994,11 +1160,14 @@ ui <- page_navbar(
             div(class = "g-layer-marker"),
             div(
               class = "g-layer-content",
-              div(class = "g-layer-header",
+              div(
+                class = "g-layer-header",
                 span(class = "g-layer-tag g-tag-impl", "Implementation"),
                 h4("Implementation measures layer")
               ),
-              p("How concrete interventions, institutions, and operational actions interact in practice. Captures on-the-ground realities and resource tensions.")
+              p(
+                "How concrete interventions, institutions, and operational actions interact in practice. Captures on-the-ground realities and resource tensions."
+              )
             )
           ),
 
@@ -1007,11 +1176,14 @@ ui <- page_navbar(
             div(class = "g-layer-marker"),
             div(
               class = "g-layer-content",
-              div(class = "g-layer-header",
+              div(
+                class = "g-layer-header",
                 span(class = "g-layer-tag g-tag-all", "All layers"),
                 h4("Combined view")
               ),
-              p("Merges both layers into one network. Useful for full coverage but can be denser. Start with a single layer first.")
+              p(
+                "Merges both layers into one network. Useful for full coverage but can be denser. Start with a single layer first."
+              )
             )
           )
         ),
@@ -1022,9 +1194,12 @@ ui <- page_navbar(
           div(
             tags$strong("Interaction families"),
             p(
-              tags$span(class = "g-inline-chip g-chip-amr", "AMR\u2013AMR"), " internal co-benefits or trade-offs within AMR. ",
-              tags$span(class = "g-inline-chip g-chip-sdg", "SDG\u2013SDG"), " interactions between SDGs. ",
-              tags$span(class = "g-inline-chip g-chip-cross", "AMR\u2013SDG"), " cross-framework interactions \u2014 the primary focus of this tool."
+              tags$span(class = "g-inline-chip g-chip-amr", "AMR\u2013AMR"),
+              " internal co-benefits or trade-offs within AMR. ",
+              tags$span(class = "g-inline-chip g-chip-sdg", "SDG\u2013SDG"),
+              " interactions between SDGs. ",
+              tags$span(class = "g-inline-chip g-chip-cross", "AMR\u2013SDG"),
+              " cross-framework interactions \u2014 the primary focus of this tool."
             )
           )
         )
@@ -1033,14 +1208,23 @@ ui <- page_navbar(
       # ── Interpreting results — callout section ─────────────────────────
       div(
         class = "g-section",
-        div(class = "g-section-label", bs_icon("shield-check"), " Interpretation"),
+        div(
+          class = "g-section-label",
+          bs_icon("shield-check"),
+          " Interpretation"
+        ),
         h2(class = "g-section-title", "Interpreting results carefully"),
-        p(class = "g-section-desc", "This tool is for exploration, not final conclusions. Keep these principles in mind."),
+        p(
+          class = "g-section-desc",
+          "This tool is for exploration, not final conclusions. Keep these principles in mind."
+        ),
 
         div(
           class = "g-caution-banner",
           div(class = "g-caution-icon", bs_icon("exclamation-triangle-fill")),
-          p("Always cross-check interaction summaries and source references in the evidence table before drawing conclusions.")
+          p(
+            "Always cross-check interaction summaries and source references in the evidence table before drawing conclusions."
+          )
         ),
 
         div(
@@ -1048,27 +1232,37 @@ ui <- page_navbar(
           div(
             class = "g-principle",
             div(class = "g-principle-num", "01"),
-            p("A visible edge means at least one record links those objectives under current filters \u2014 it does not imply a universal or causal relationship.")
+            p(
+              "A visible edge means at least one record links those objectives under current filters \u2014 it does not imply a universal or causal relationship."
+            )
           ),
           div(
             class = "g-principle",
             div(class = "g-principle-num", "02"),
-            p("The same pair may show different effects by country, layer, or theme. Use filters to isolate contexts.")
+            p(
+              "The same pair may show different effects by country, layer, or theme. Use filters to isolate contexts."
+            )
           ),
           div(
             class = "g-principle",
             div(class = "g-principle-num", "03"),
-            p("Policy tension labels reflect the interpretation at time of analysis. Read them alongside the full interaction summary.")
+            p(
+              "Policy tension labels reflect the interpretation at time of analysis. Read them alongside the full interaction summary."
+            )
           ),
           div(
             class = "g-principle",
             div(class = "g-principle-num", "04"),
-            p("Bidirectional edges reinforce each other, but each direction may differ in strength \u2014 check the individual records.")
+            p(
+              "Bidirectional edges reinforce each other, but each direction may differ in strength \u2014 check the individual records."
+            )
           ),
           div(
             class = "g-principle",
             div(class = "g-principle-num", "05"),
-            p("Absence of an edge does not mean no interaction exists \u2014 it may simply not be captured in the current dataset.")
+            p(
+              "Absence of an edge does not mean no interaction exists \u2014 it may simply not be captured in the current dataset."
+            )
           )
         )
       ),
@@ -1101,13 +1295,19 @@ ui <- page_navbar(
           ),
           div(
             class = "g-tip-card",
-            div(class = "g-tip-icon-wrap g-tip-c4", bs_icon("hand-index-thumb")),
+            div(
+              class = "g-tip-icon-wrap g-tip-c4",
+              bs_icon("hand-index-thumb")
+            ),
             tags$strong("Drag nodes"),
             p("Reposition nodes freely; use nav buttons to zoom or reset.")
           ),
           div(
             class = "g-tip-card",
-            div(class = "g-tip-icon-wrap g-tip-c5", bs_icon("arrow-left-right")),
+            div(
+              class = "g-tip-icon-wrap g-tip-c5",
+              bs_icon("arrow-left-right")
+            ),
             tags$strong("Bidirectional only"),
             p("Toggle in Advanced filters for mutual-influence edges.")
           ),
@@ -1119,7 +1319,6 @@ ui <- page_navbar(
           )
         )
       )
-
     )
   ),
 
@@ -1948,10 +2147,26 @@ server <- function(input, output, session) {
         Bidirectional = ifelse(bidirectional, "Yes", "No"),
         `Policy Tension` = policy_tension,
         `Interaction Summary` = interaction_summary,
-        `Policy Objective 1` = if_else(is.na(policy_strategic_objective_1), "", policy_strategic_objective_1),
-        `Policy Objective 2` = if_else(is.na(policy_strategic_objective_2), "", policy_strategic_objective_2),
-        `Specific Actions 1` = if_else(is.na(policy_specific_actions_1),    "", policy_specific_actions_1),
-        `Specific Actions 2` = if_else(is.na(policy_specific_actions_2),    "", policy_specific_actions_2),
+        `Policy Objective 1` = if_else(
+          is.na(policy_strategic_objective_1),
+          "",
+          policy_strategic_objective_1
+        ),
+        `Policy Objective 2` = if_else(
+          is.na(policy_strategic_objective_2),
+          "",
+          policy_strategic_objective_2
+        ),
+        `Specific Actions 1` = if_else(
+          is.na(policy_specific_actions_1),
+          "",
+          policy_specific_actions_1
+        ),
+        `Specific Actions 2` = if_else(
+          is.na(policy_specific_actions_2),
+          "",
+          policy_specific_actions_2
+        ),
         Reference = reference
       )
 
