@@ -377,6 +377,20 @@ body {
   box-shadow: 0 0 0 0.2rem rgba(164, 52, 58, 0.16);
 }
 
+/* Compact variant when inside sidebar accordion */
+.accordion-body .network-filter-group {
+  margin-bottom: 10px;
+}
+.accordion-body .network-filter-group:last-child {
+  margin-bottom: 0;
+}
+.accordion-body .network-filter-group .form-select {
+  min-height: unset;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0.42rem 2rem 0.42rem 0.75rem;
+}
+
 .data-card h3,
 .data-card h4 {
   margin-top: 0;
@@ -720,11 +734,25 @@ div.vis-tooltip b {
   border-color: rgba(46, 125, 50, 0.32);
   color: #166534;
 }
+.legend-synergy::before {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  border-top: 2.5px solid #2E7D32;
+  flex-shrink: 0;
+}
 
 .legend-tradeoff {
   background: rgba(198, 40, 40, 0.12);
   border-color: rgba(198, 40, 40, 0.32);
   color: #991b1b;
+}
+.legend-tradeoff::before {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  border-top: 2.5px solid #C62828;
+  flex-shrink: 0;
 }
 
 .legend-mixed {
@@ -732,17 +760,51 @@ div.vis-tooltip b {
   border-color: rgba(249, 168, 37, 0.35);
   color: #92400e;
 }
+.legend-mixed::before {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  border-top: 2.5px solid #F9A825;
+  flex-shrink: 0;
+}
 
 .legend-amr {
-  background: rgba(15, 118, 110, 0.14);
-  border-color: rgba(15, 118, 110, 0.34);
-  color: #0f766e;
+  background: #fff;
+  border-color: #dbe3ec;
+  color: #334155;
+}
+.legend-amr::before {
+  content: "";
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #031816;
+  flex-shrink: 0;
 }
 
 .legend-sdg {
-  background: rgba(29, 78, 216, 0.12);
-  border-color: rgba(29, 78, 216, 0.32);
-  color: #1d4ed8;
+  background: #fff;
+  border-color: #dbe3ec;
+  color: #334155;
+}
+.legend-sdg::before {
+  content: "";
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  background: linear-gradient(
+    135deg,
+    #E5243B 0%,
+    #DDA63A 18%,
+    #4C9F38 35%,
+    #26BDE2 52%,
+    #FCC30B 68%,
+    #A21942 84%,
+    #0A97D9 100%
+  );
+  flex-shrink: 0;
 }
 
 /* Node drawer */

@@ -378,7 +378,7 @@ ui <- page_navbar(
     heading_font = font_google("Inter")
   ),
   header = tagList(
-    tags$link(rel = "stylesheet", type = "text/css", href = "styles.css?v=8")
+    tags$link(rel = "stylesheet", type = "text/css", href = "styles.css?v=12")
   ),
 
   nav_panel(
@@ -405,7 +405,46 @@ ui <- page_navbar(
           accordion(
             id = "filter_accordion",
             multiple = TRUE,
-            open = c("Types"),
+            open = c("NetworkView", "Types"),
+
+            accordion_panel(
+              title = filter_title("diagram-2", "Network view"),
+              value = "NetworkView",
+              div(
+                class = "network-filter-group",
+                tags$label(
+                  class = "network-filter-label",
+                  `for` = "source_view",
+                  "Policy layer"
+                ),
+                selectInput(
+                  "source_view",
+                  label = NULL,
+                  choices = c(
+                    "Objective only" = "Objective",
+                    "Implementation only" = "Implementation",
+                    "All layers" = "All"
+                  ),
+                  selected = "Objective",
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "network-filter-group",
+                tags$label(
+                  class = "network-filter-label",
+                  `for` = "network_focus_node",
+                  "Focus objective"
+                ),
+                selectInput(
+                  "network_focus_node",
+                  label = NULL,
+                  choices = network_focus_choices,
+                  selected = "",
+                  width = "100%"
+                )
+              )
+            ),
 
             accordion_panel(
               title = filter_title("diagram-3", "Interaction Types"),
@@ -539,47 +578,16 @@ ui <- page_navbar(
           ),
 
           div(
+            class = "legend-pills",
+            span(class = "legend-pill legend-synergy", "Synergy"),
+            span(class = "legend-pill legend-tradeoff", "Conflict"),
+            span(class = "legend-pill legend-mixed", "Mixed"),
+            span(class = "legend-pill legend-amr", "AMR objective"),
+            span(class = "legend-pill legend-sdg", "SDG goal")
+          ),
+
+          div(
             class = "network-card",
-            div(
-              class = "network-toolbar",
-              div(
-                class = "network-toolbar-controls",
-                div(
-                  class = "network-filter-group",
-                  tags$label(
-                    class = "network-filter-label",
-                    `for` = "source_view",
-                    "Policy layer"
-                  ),
-                  selectInput(
-                    "source_view",
-                    label = NULL,
-                    choices = c(
-                      "Objective only" = "Objective",
-                      "Implementation only" = "Implementation",
-                      "All layers" = "All"
-                    ),
-                    selected = "Objective",
-                    width = "100%"
-                  )
-                ),
-                div(
-                  class = "network-filter-group",
-                  tags$label(
-                    class = "network-filter-label",
-                    `for` = "network_focus_node",
-                    "Focus objective"
-                  ),
-                  selectInput(
-                    "network_focus_node",
-                    label = NULL,
-                    choices = network_focus_choices,
-                    selected = "",
-                    width = "100%"
-                  )
-                )
-              )
-            ),
             div(
               class = "network-stage",
               shinycssloaders::withSpinner(
@@ -589,17 +597,6 @@ ui <- page_navbar(
               ),
               uiOutput("node_drawer")
             )
-          ),
-
-          div(
-            class = "legend-pills",
-            span(class = "legend-pill legend-line-solid", "Direct"),
-            span(class = "legend-pill legend-line-dashed", "Indirect"),
-            span(class = "legend-pill legend-synergy", "Synergy"),
-            span(class = "legend-pill legend-tradeoff", "Conflict"),
-            span(class = "legend-pill legend-mixed", "Mixed"),
-            span(class = "legend-pill legend-amr", "AMR objective"),
-            span(class = "legend-pill legend-sdg", "SDG goal")
           ),
 
           div(
