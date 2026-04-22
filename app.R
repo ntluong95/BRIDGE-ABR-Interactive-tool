@@ -99,6 +99,7 @@ interactions <- interactions %>%
     effect_raw = effect,
     effect = normalize_effect(effect),
     theme = if_else(is.na(theme) | theme == "", "Unclassified", theme),
+    theme = str_replace_all(theme, " and ", " & "),
     bidirectional = as.logical(bidirectional)
   )
 
@@ -734,7 +735,7 @@ ui <- page_navbar(
           ),
           p(
             class = "g-hero-subtitle",
-            "Map synergies and trade-offs between AMR objectives and Sustainable Development Goals across national action plans."
+            "Map synergies and conflicts between AMR objectives and Sustainable Development Goals across national action plans."
           ),
           div(
             class = "g-hero-cta",
@@ -787,7 +788,7 @@ ui <- page_navbar(
           ),
           h3("Live Metrics"),
           p(
-            "Synergy, trade-off, and mixed counts update instantly as you filter."
+            "Synergy, conflict, and both-synergy-and-conflict counts update instantly as you apply filters."
           )
         ),
         div(
@@ -834,14 +835,18 @@ ui <- page_navbar(
             div(class = "g-tl-connector"),
             div(
               class = "g-tl-card",
-              div(class = "g-tl-card-icon", bs_icon("geo-alt-fill")),
+              div(class = "g-tl-card-icon", bs_icon("layers-fill")),
               div(
                 class = "g-tl-card-body",
-                h4("Choose a country"),
+                h4("Select a policy layer"),
                 p(
-                  "Use the ",
-                  tags$strong("Country / NAP context"),
-                  " filter. Start with one country to keep the network readable."
+                  "Open the ",
+                  tags$strong("Network view"),
+                  " panel in the left sidebar. Choose ",
+                  tags$em("Objective only"),
+                  " for strategic intent, ",
+                  tags$em("Implementation only"),
+                  " for operational practice, or leave blank to see all layers."
                 )
               )
             )
@@ -853,15 +858,14 @@ ui <- page_navbar(
             div(class = "g-tl-connector"),
             div(
               class = "g-tl-card",
-              div(class = "g-tl-card-icon", bs_icon("layers-fill")),
+              div(class = "g-tl-card-icon", bs_icon("grid-1x2-fill")),
               div(
                 class = "g-tl-card-body",
-                h4("Select a policy layer"),
+                h4("Pick a theme"),
                 p(
-                  tags$em("Objective"),
-                  " shows strategic intent. ",
-                  tags$em("Implementation"),
-                  " shows operational practice. Or view both together."
+                  "Use the ",
+                  tags$strong("Themes"),
+                  " filter to focus on a policy area such as Agriculture, Health Systems, or Environment."
                 )
               )
             )
@@ -876,9 +880,11 @@ ui <- page_navbar(
               div(class = "g-tl-card-icon", bs_icon("funnel-fill")),
               div(
                 class = "g-tl-card-body",
-                h4("Filter by type, theme, and effect"),
+                h4("Filter by interaction type and effect"),
                 p(
-                  "Narrow to specific interaction families, policy themes, or effect types, then press ",
+                  "Use the combined ",
+                  tags$strong("Interaction types & effect"),
+                  " panel to narrow by family (AMR\u2013SDG, etc.) and effect (Synergy, Conflict, or Both), then press ",
                   tags$strong("Apply filters"),
                   "."
                 )
@@ -897,9 +903,7 @@ ui <- page_navbar(
                 class = "g-tl-card-body",
                 h4("Read the network"),
                 p(
-                  "Click any node to open its detail drawer. Use ",
-                  tags$strong("Focus objective"),
-                  " to spotlight one node and its connections."
+                  "Click any node to open its detail drawer and see all related interactions. Drag nodes to rearrange; use the navigation buttons to zoom or fit the view."
                 )
               )
             )
@@ -951,7 +955,7 @@ ui <- page_navbar(
                 class = "g-legend-detail",
                 tags$strong("AMR Objectives"),
                 p(
-                  "Dark teal circles. Each represents one of the 5 WHO Global Action Plan objectives (AMR-01 to AMR-05)."
+                  "Dark circular icons with a number and name. Each represents one of the 5 WHO Global Action Plan objectives."
                 )
               )
             ),
@@ -962,7 +966,7 @@ ui <- page_navbar(
                 class = "g-legend-detail",
                 tags$strong("SDG Goals"),
                 p(
-                  "Coloured squares. One per UN Sustainable Development Goal (SDG-01 to SDG-17)."
+                  "Official coloured SDG icons. One per UN Sustainable Development Goal (SDG-01 to SDG-17)."
                 )
               )
             )
@@ -1115,7 +1119,7 @@ ui <- page_navbar(
         h2(class = "g-section-title", "Understanding policy layers"),
         p(
           class = "g-section-desc",
-          "Every interaction record is tagged to a policy layer. Switch layers with the dropdown above the network."
+          "Every interaction record is tagged to a policy layer. Switch layers using the Policy layer dropdown in the left sidebar under Network view."
         ),
 
         div(
@@ -1177,7 +1181,7 @@ ui <- page_navbar(
             tags$strong("Interaction families"),
             p(
               tags$span(class = "g-inline-chip g-chip-amr", "AMR\u2013AMR"),
-              " internal co-benefits or trade-offs within AMR. ",
+              " internal synergies or conflicts within AMR. ",
               tags$span(class = "g-inline-chip g-chip-sdg", "SDG\u2013SDG"),
               " interactions between SDGs. ",
               tags$span(class = "g-inline-chip g-chip-cross", "AMR\u2013SDG"),
@@ -1288,10 +1292,12 @@ ui <- page_navbar(
             class = "g-tip-card",
             div(
               class = "g-tip-icon-wrap g-tip-c5",
-              bs_icon("arrow-left-right")
+              bs_icon("geo-alt-fill")
             ),
-            tags$strong("Bidirectional only"),
-            p("Toggle in Advanced filters for mutual-influence edges.")
+            tags$strong("Compare countries"),
+            p(
+              "Apply a country filter, note the metrics, then switch to another country to compare patterns."
+            )
           ),
           div(
             class = "g-tip-card",
@@ -1391,7 +1397,11 @@ server <- function(input, output, session) {
 
   source_view <- reactive({
     current_value <- input$source_view
-    if (is.null(current_value) || length(current_value) == 0 || !nzchar(current_value)) {
+    if (
+      is.null(current_value) ||
+        length(current_value) == 0 ||
+        !nzchar(current_value)
+    ) {
       "All"
     } else {
       current_value
@@ -1592,7 +1602,8 @@ server <- function(input, output, session) {
 
     sv <- source_view()
     if (!identical(sv, "All")) {
-      layer_label <- switch(sv,
+      layer_label <- switch(
+        sv,
         "Objective" = "Objective only",
         "Implementation" = "Implementation only",
         sv
@@ -1600,20 +1611,32 @@ server <- function(input, output, session) {
       chips[["Policy layer"]] <- layer_label
     }
     if (length(applied_filters$theme) > 0) {
-      chips[["Theme"]] <- compact_selection(applied_filters$theme, theme_choices)
+      chips[["Theme"]] <- compact_selection(
+        applied_filters$theme,
+        theme_choices
+      )
     }
     if (length(applied_filters$type) > 0) {
       chips[["Type"]] <- compact_selection(applied_filters$type, type_choices)
     }
     if (length(applied_filters$effect) > 0) {
-      chips[["Effect"]] <- compact_selection(applied_filters$effect, effect_choices)
+      chips[["Effect"]] <- compact_selection(
+        applied_filters$effect,
+        effect_choices
+      )
     }
     if (length(applied_filters$country) > 0) {
-      chips[["Country"]] <- compact_selection(applied_filters$country, country_choices)
+      chips[["Country"]] <- compact_selection(
+        applied_filters$country,
+        country_choices
+      )
     }
 
     subtitle <- if (length(chips) == 0) {
-      div(class = "filter-summary-none", "No filters applied \u2014 showing all interactions")
+      div(
+        class = "filter-summary-none",
+        "No filters applied \u2014 showing no interactions"
+      )
     } else {
       chip_tags <- lapply(names(chips), function(k) {
         span(
