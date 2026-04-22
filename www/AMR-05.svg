@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <circle cx="200" cy="200" r="200" fill="#031816"/>
+  <text x="68" y="122" font-family="Arial,sans-serif" font-size="88" font-weight="bold" fill="white" text-anchor="start" opacity="0.95">5</text>
+  <text x="200" y="172" font-family="Arial,sans-serif" font-size="38" font-weight="bold" fill="white" text-anchor="middle">INVESTMENT</text>
+  <text x="200" y="218" font-family="Arial,sans-serif" font-size="38" font-weight="bold" fill="white" text-anchor="middle">&amp; INNOVATION</text>
+  <g transform="translate(200,335) scale(0.56)">
+    <circle cx="0" cy="-30" r="72" fill="none" stroke="white" stroke-width="14"/>
+    <rect x="-26" y="38" width="52" height="14" rx="4" fill="white" opacity="0.9"/>
+    <rect x="-20" y="52" width="40" height="14" rx="4" fill="white" opacity="0.9"/>
+    <rect x="-14" y="66" width="28" height="14" rx="6" fill="white" opacity="0.9"/>
+    <polyline points="-20,-10 -7,-32 7,-10 20,-32"
+              fill="none" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+    <line x1="0"   y1="-114" x2="0"   y2="-102" stroke="white" stroke-width="8" stroke-linecap="round" opacity="0.55"/>
+    <line x1="64"  y1="-90"  x2="54"  y2="-78"  stroke="white" stroke-width="8" stroke-linecap="round" opacity="0.55"/>
+    <line x1="-64" y1="-90"  x2="-54" y2="-78"  stroke="white" stroke-width="8" stroke-linecap="round" opacity="0.55"/>
+    <line x1="84"  y1="-30"  x2="72"  y2="-30"  stroke="white" stroke-width="8" stroke-linecap="round" opacity="0.55"/>
+    <line x1="-84" y1="-30"  x2="-72" y2="-30"  stroke="white" stroke-width="8" stroke-linecap="round" opacity="0.55"/>
+  </g>
+</svg>

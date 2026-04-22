@@ -321,6 +321,48 @@ body {
   font-size: 12px;
 }
 
+.filter-summary-none {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: #A4343A;
+  font-style: italic;
+}
+
+.filter-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 7px;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1;
+  border: 1px solid #f0c0c2;
+}
+
+.filter-chip-key {
+  background: #fdf2f2;
+  color: #A4343A;
+  font-weight: 600;
+  padding: 3px 6px;
+  border-right: 1px solid #f0c0c2;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.filter-chip-val {
+  background: #ffffff;
+  color: #1f2937;
+  padding: 3px 7px;
+}
+
 .network-card,
 .data-card {
   padding: 12px;

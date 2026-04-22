@@ -72,14 +72,14 @@ derive_interaction_type <- function(from_id, to_id) {
 normalize_effect <- function(effect_value) {
   case_when(
     effect_value %in%
-      c("Align", "Synergy (co-benefit)") ~ "Synergy (co-benefit)",
+      c("Align", "Synergy") ~ "Synergy",
     effect_value %in%
       c("Conflict", "Tension (trade-off)") ~ "Conflict",
     effect_value %in%
       c(
         "Independent",
-        "Mixed / context-dependent"
-      ) ~ "Mixed / context-dependent",
+        "Both synergy and conflict"
+      ) ~ "Both synergy and conflict",
     TRUE ~ effect_value
   )
 }
@@ -200,8 +200,8 @@ country_choices <- sort(unique(interactions_enriched$country))
 theme_choices <- sort(unique(interactions_enriched$theme))
 effect_choices <- c(
   "Conflict",
-  "Synergy (co-benefit)",
-  "Mixed / context-dependent"
+  "Synergy",
+  "Both synergy and conflict"
 )
 effect_choices <- intersect(
   effect_choices,
@@ -236,8 +236,8 @@ sdg_palette <- c(
 amr_color <- "#031816"
 effect_palette <- c(
   "Conflict" = "#C62828",
-  "Synergy (co-benefit)" = "#2E7D32",
-  "Mixed / context-dependent" = "#F9A825"
+  "Synergy" = "#2E7D32",
+  "Both synergy and conflict" = "#F9A825"
 )
 
 build_sdg_logo_map <- function(www_dir = "www") {
@@ -295,6 +295,40 @@ if (length(missing_sdg_logo) > 0) {
     call. = FALSE
   )
 }
+
+build_amr_logo_map <- function(www_dir = "www") {
+  logo_files <- list.files(
+    www_dir,
+    pattern = "(?i)\\.(png|svg|jpg|jpeg|webp)$"
+  )
+  logo_num <- stringr::str_match(
+    logo_files,
+    "(?i)AMR[^0-9]*([0-9]{1,2})"
+  )[, 2]
+  logo_num <- suppressWarnings(as.integer(logo_num))
+  valid <- !is.na(logo_num) & logo_num >= 1 & logo_num <= 5
+  if (!any(valid)) {
+    return(stats::setNames(character(), character()))
+  }
+  logo_df <- data.frame(
+    file = logo_files[valid],
+    num = logo_num[valid],
+    stringsAsFactors = FALSE
+  )
+  ext <- tolower(tools::file_ext(logo_df$file))
+  logo_df$ext_rank <- dplyr::case_when(
+    ext == "svg" ~ 1L,
+    ext == "png" ~ 2L,
+    ext %in% c("jpg", "jpeg") ~ 3L,
+    ext == "webp" ~ 4L,
+    TRUE ~ 5L
+  )
+  logo_df <- logo_df[order(logo_df$num, logo_df$ext_rank), ]
+  logo_df <- logo_df[!duplicated(logo_df$num), , drop = FALSE]
+  stats::setNames(logo_df$file, sprintf("amr%02d", logo_df$num))
+}
+
+amr_logo_map <- build_amr_logo_map("www")
 
 partner_links <- list(
   uu = "https://www.uu.se/en",
@@ -372,7 +406,7 @@ ui <- page_navbar(
     heading_font = font_google("Inter")
   ),
   header = tagList(
-    tags$link(rel = "stylesheet", type = "text/css", href = "styles.css?v=12")
+    tags$link(rel = "stylesheet", type = "text/css", href = "styles.css?v=15")
   ),
 
   nav_panel(
@@ -399,7 +433,7 @@ ui <- page_navbar(
           accordion(
             id = "filter_accordion",
             multiple = TRUE,
-            open = c("NetworkView", "Types"),
+            open = c("NetworkView", "Theme", "Types"),
 
             accordion_panel(
               title = filter_title("diagram-2", "Network view"),
@@ -411,7 +445,7 @@ ui <- page_navbar(
                   `for` = "source_view",
                   "Policy layer"
                 ),
-                selectInput(
+                pickerInput(
                   "source_view",
                   label = NULL,
                   choices = c(
@@ -419,35 +453,52 @@ ui <- page_navbar(
                     "Implementation only" = "Implementation",
                     "All layers" = "All"
                   ),
-                  selected = "Objective",
-                  width = "100%"
-                )
-              ),
-              div(
-                class = "network-filter-group",
-                tags$label(
-                  class = "network-filter-label",
-                  `for` = "network_focus_node",
-                  "Focus objective"
-                ),
-                selectInput(
-                  "network_focus_node",
-                  label = NULL,
-                  choices = network_focus_choices,
-                  selected = "",
+                  selected = character(0),
+                  multiple = FALSE,
+                  options = modifyList(
+                    picker_options,
+                    list(title = "All layers (default)")
+                  ),
                   width = "100%"
                 )
               )
             ),
 
             accordion_panel(
-              title = filter_title("diagram-3", "Interaction Types"),
+              title = filter_title("grid-1x2", "Themes"),
+              value = "Theme",
+              pickerInput(
+                "theme_filter",
+                label = NULL,
+                choices = theme_choices,
+                selected = character(0),
+                multiple = TRUE,
+                options = picker_options
+              )
+            ),
+
+            accordion_panel(
+              title = filter_title("diagram-3", "Interaction types & effect"),
               value = "Types",
+              tags$label(class = "network-filter-label", "Interaction types"),
               pickerInput(
                 "type_filter",
                 label = NULL,
                 choices = type_choices,
-                selected = type_choices,
+                selected = character(0),
+                multiple = TRUE,
+                options = picker_options
+              ),
+              tags$label(
+                class = "network-filter-label",
+                style = "margin-top:8px;",
+                "Interaction effect"
+              ),
+              pickerInput(
+                "effect_filter",
+                label = NULL,
+                choices = effect_choices,
+                selected = character(0),
                 multiple = TRUE,
                 options = picker_options
               )
@@ -460,70 +511,11 @@ ui <- page_navbar(
                 "country_filter",
                 label = NULL,
                 choices = country_choices,
-                selected = country_choices,
-                multiple = TRUE,
-                options = picker_options
-              )
-            ),
-
-            accordion_panel(
-              title = filter_title("grid-1x2", "Themes"),
-              value = "Theme",
-              pickerInput(
-                "theme_filter",
-                label = NULL,
-                choices = theme_choices,
-                selected = theme_choices,
-                multiple = TRUE,
-                options = picker_options
-              )
-            ),
-
-            accordion_panel(
-              title = filter_title("activity", "Interaction effect"),
-              value = "Effect",
-              pickerInput(
-                "effect_filter",
-                label = NULL,
-                choices = effect_choices,
-                selected = effect_choices,
-                multiple = TRUE,
-                options = picker_options
-              )
-            ),
-
-            accordion_panel(
-              title = filter_title("sliders", "Advanced filters"),
-              value = "Advanced",
-              prettySwitch(
-                "context_only",
-                label = "Context-dependent only",
-                value = FALSE,
-                status = "info",
-                fill = TRUE
-              ),
-              prettySwitch(
-                "bidirectional_only",
-                label = "Bidirectional only",
-                value = FALSE,
-                status = "info",
-                fill = TRUE
-              ),
-              pickerInput(
-                "focus_nodes",
-                label = "All policies",
-                choices = objective_choices,
                 selected = character(0),
                 multiple = TRUE,
                 options = picker_options
-              ),
-              textInput(
-                "search_text",
-                "Search policy tension / source",
-                value = "",
-                placeholder = "Type keyword"
               )
-            )
+            ),
           ),
 
           div(
@@ -554,7 +546,11 @@ ui <- page_navbar(
             class = "metrics-grid",
             metric_card("metric_synergy", "Synergies", "metric-synergy"),
             metric_card("metric_tradeoff", "Conflicts", "metric-tradeoff"),
-            metric_card("metric_mixed", "Mixed", "metric-mixed"),
+            metric_card(
+              "metric_mixed",
+              "Both synergy & conflict",
+              "metric-mixed"
+            ),
             metric_card("metric_total", "Total interactions", "metric-total")
           ),
 
@@ -562,7 +558,10 @@ ui <- page_navbar(
             class = "legend-pills",
             span(class = "legend-pill legend-synergy", "Synergy"),
             span(class = "legend-pill legend-tradeoff", "Conflict"),
-            span(class = "legend-pill legend-mixed", "Mixed"),
+            span(
+              class = "legend-pill legend-mixed",
+              "Both synergy and conflict"
+            ),
             span(class = "legend-pill legend-amr", "AMR objective"),
             span(class = "legend-pill legend-sdg", "SDG goal")
           ),
@@ -996,8 +995,10 @@ ui <- page_navbar(
               div(class = "g-legend-line g-line-mixed"),
               div(
                 class = "g-legend-detail",
-                tags$strong("Mixed"),
-                p("Context-dependent; both reinforcing and conflicting.")
+                tags$strong("Both synergy and conflict"),
+                p(
+                  "The two objectives have both reinforcing and conflicting interactions."
+                )
               )
             )
           ),
@@ -1375,10 +1376,7 @@ server <- function(input, output, session) {
   }
 
   compact_selection <- function(values, all_values, limit = 3) {
-    if (length(values) == 0) {
-      return("None selected")
-    }
-    if (length(values) == length(all_values)) {
+    if (length(values) == 0 || length(values) == length(all_values)) {
       return("All")
     }
     if (length(values) <= limit) {
@@ -1393,39 +1391,33 @@ server <- function(input, output, session) {
 
   source_view <- reactive({
     current_value <- input$source_view
-    if (is.null(current_value) || !nzchar(current_value)) {
-      "Objective"
+    if (is.null(current_value) || length(current_value) == 0 || !nzchar(current_value)) {
+      "All"
     } else {
       current_value
     }
   })
 
   default_filters <- list(
-    type = type_choices,
-    country = country_choices,
-    theme = theme_choices,
-    effect = effect_choices,
-    focus_nodes = character(0),
-    context_only = FALSE,
-    bidirectional_only = FALSE,
-    search_text = ""
+    type = character(0),
+    country = character(0),
+    theme = character(0),
+    effect = character(0)
   )
 
   applied_filters <- reactiveValues(
     type = default_filters$type,
     country = default_filters$country,
     theme = default_filters$theme,
-    effect = default_filters$effect,
-    focus_nodes = default_filters$focus_nodes,
-    context_only = default_filters$context_only,
-    bidirectional_only = default_filters$bidirectional_only,
-    search_text = default_filters$search_text
+    effect = default_filters$effect
   )
 
   selected_node <- reactiveVal(NULL)
-  show_edges   <- reactiveVal(FALSE)
+  show_edges <- reactiveVal(FALSE)
 
-  output$edges_visible <- reactive({ show_edges() })
+  output$edges_visible <- reactive({
+    show_edges()
+  })
   outputOptions(output, "edges_visible", suspendWhenHidden = FALSE)
 
   observeEvent(input$open_project_about, {
@@ -1537,33 +1529,13 @@ server <- function(input, output, session) {
       "effect_filter",
       selected = default_filters$effect
     )
-    updatePickerInput(
-      session,
-      "focus_nodes",
-      selected = default_filters$focus_nodes
-    )
-    updatePrettySwitch(
-      session,
-      "context_only",
-      value = default_filters$context_only
-    )
-    updatePrettySwitch(
-      session,
-      "bidirectional_only",
-      value = default_filters$bidirectional_only
-    )
-    updateTextInput(session, "search_text", value = default_filters$search_text)
-    updateSelectInput(session, "source_view", selected = "Objective")
+    updatePickerInput(session, "source_view", selected = character(0))
     updateSelectInput(session, "network_focus_node", selected = "")
 
     applied_filters$type <- default_filters$type
     applied_filters$country <- default_filters$country
     applied_filters$theme <- default_filters$theme
     applied_filters$effect <- default_filters$effect
-    applied_filters$focus_nodes <- default_filters$focus_nodes
-    applied_filters$context_only <- default_filters$context_only
-    applied_filters$bidirectional_only <- default_filters$bidirectional_only
-    applied_filters$search_text <- default_filters$search_text
     selected_node(NULL)
     show_edges(FALSE)
   }
@@ -1573,10 +1545,6 @@ server <- function(input, output, session) {
     applied_filters$country <- input$country_filter
     applied_filters$theme <- input$theme_filter
     applied_filters$effect <- input$effect_filter
-    applied_filters$focus_nodes <- input$focus_nodes
-    applied_filters$context_only <- isTRUE(input$context_only)
-    applied_filters$bidirectional_only <- isTRUE(input$bidirectional_only)
-    applied_filters$search_text <- input$search_text
     selected_node(NULL)
     show_edges(TRUE)
   })
@@ -1594,56 +1562,22 @@ server <- function(input, output, session) {
 
     if (length(applied_filters$type) > 0) {
       df <- df %>% filter(interaction_type %in% applied_filters$type)
-    } else {
-      df <- df[0, ]
     }
 
     if (length(applied_filters$country) > 0) {
       df <- df %>% filter(country %in% applied_filters$country)
-    } else {
-      df <- df[0, ]
     }
 
     if (length(applied_filters$theme) > 0) {
       df <- df %>% filter(theme %in% applied_filters$theme)
-    } else {
-      df <- df[0, ]
     }
 
     if (length(applied_filters$effect) > 0) {
       df <- df %>% filter(effect %in% applied_filters$effect)
-    } else {
-      df <- df[0, ]
     }
 
     if (!identical(source_view(), "All")) {
       df <- df %>% filter(source == source_view())
-    }
-
-    if (isTRUE(applied_filters$context_only)) {
-      df <- df %>% filter(context_dependent)
-    }
-
-    if (isTRUE(applied_filters$bidirectional_only)) {
-      df <- df %>% filter(bidirectional)
-    }
-
-    if (length(applied_filters$focus_nodes) > 0) {
-      df <- df %>%
-        filter(
-          from %in%
-            applied_filters$focus_nodes |
-            to %in% applied_filters$focus_nodes
-        )
-    }
-
-    search_term <- str_to_lower(str_trim(ifelse(
-      is.null(applied_filters$search_text),
-      "",
-      applied_filters$search_text
-    )))
-    if (nchar(search_term) > 0) {
-      df <- df %>% filter(str_detect(search_blob, fixed(search_term)))
     }
 
     df
@@ -1654,32 +1588,52 @@ server <- function(input, output, session) {
   })
 
   output$dynamic_title <- renderUI({
-    country_label <- compact_selection(applied_filters$country, country_choices)
-    type_label <- compact_selection(applied_filters$type, type_choices)
-    source_label <- if (identical(source_view(), "All")) {
-      "Objective + Implementation"
+    chips <- list()
+
+    sv <- source_view()
+    if (!identical(sv, "All")) {
+      layer_label <- switch(sv,
+        "Objective" = "Objective only",
+        "Implementation" = "Implementation only",
+        sv
+      )
+      chips[["Policy layer"]] <- layer_label
+    }
+    if (length(applied_filters$theme) > 0) {
+      chips[["Theme"]] <- compact_selection(applied_filters$theme, theme_choices)
+    }
+    if (length(applied_filters$type) > 0) {
+      chips[["Type"]] <- compact_selection(applied_filters$type, type_choices)
+    }
+    if (length(applied_filters$effect) > 0) {
+      chips[["Effect"]] <- compact_selection(applied_filters$effect, effect_choices)
+    }
+    if (length(applied_filters$country) > 0) {
+      chips[["Country"]] <- compact_selection(applied_filters$country, country_choices)
+    }
+
+    subtitle <- if (length(chips) == 0) {
+      div(class = "filter-summary-none", "No filters applied \u2014 showing all interactions")
     } else {
-      source_view()
+      chip_tags <- lapply(names(chips), function(k) {
+        span(
+          class = "filter-chip",
+          span(class = "filter-chip-key", k),
+          span(class = "filter-chip-val", chips[[k]])
+        )
+      })
+      div(class = "filter-chips-row", chip_tags)
     }
 
     div(
       class = "title-block",
-      h2("Policy interactions in national action plans"),
-      p(
-        tags$strong("Countries:"),
-        paste(country_label),
-        tags$span(" | "),
-        tags$strong("Types:"),
-        paste(type_label),
-        tags$span(" | "),
-        tags$strong("Source:"),
-        source_label
-      )
+      h2("Policy interactions in National Action Plans"),
+      subtitle
     )
   })
 
   output$metric_synergy <- renderText({
-    format_count(sum(displayed_interactions()$effect == "Synergy (co-benefit)"))
+    format_count(sum(displayed_interactions()$effect == "Synergy"))
   })
 
   output$metric_tradeoff <- renderText({
@@ -1688,7 +1642,7 @@ server <- function(input, output, session) {
 
   output$metric_mixed <- renderText({
     format_count(sum(
-      displayed_interactions()$effect == "Mixed / context-dependent"
+      displayed_interactions()$effect == "Both synergy and conflict"
     ))
   })
 
@@ -1699,7 +1653,7 @@ server <- function(input, output, session) {
   edge_color_with_alpha <- function(effect_vec, mode_vec) {
     effect_norm <- ifelse(
       is.na(effect_vec),
-      "Mixed / context-dependent",
+      "Both synergy and conflict",
       effect_vec
     )
     mode_norm <- ifelse(is.na(mode_vec), "Direct", mode_vec)
@@ -1721,7 +1675,7 @@ server <- function(input, output, session) {
         active_nodes <- if (!show_edges()) {
           nodes$id
         } else {
-          unique(c(df$from, df$to, applied_filters$focus_nodes))
+          unique(c(df$from, df$to))
         }
         selected_id <- normalize_node_selection(selected_node())
         selected_id_safe <- if (is.null(selected_id)) {
@@ -1733,8 +1687,11 @@ server <- function(input, output, session) {
         plot_nodes <- nodes %>%
           mutate(
             is_sdg = node_group == "SDG",
+            is_amr = node_group == "AMR",
             sdg_logo = unname(sdg_logo_map[id]),
             has_sdg_logo = is_sdg & !is.na(sdg_logo) & nzchar(sdg_logo),
+            amr_logo = unname(amr_logo_map[id]),
+            has_amr_logo = is_amr & !is.na(amr_logo) & nzchar(amr_logo),
             label_plot = short_label,
             title = paste0(
               "<b>",
@@ -1765,21 +1722,23 @@ server <- function(input, output, session) {
               ifelse(active, "#334155", "#A8B4C3")
             ),
             font.color = case_when(
-              has_sdg_logo ~ "rgba(0,0,0,0)",
+              has_sdg_logo | has_amr_logo ~ "rgba(0,0,0,0)",
               active ~ "#FFFFFF",
               TRUE ~ "#6B7280"
             ),
             shape = case_when(
-              node_group == "AMR" ~ "circle",
+              has_amr_logo ~ "circularImage",
               has_sdg_logo ~ "image",
               TRUE ~ "square"
             ),
-            image = ifelse(has_sdg_logo, sdg_logo, NA_character_),
+            image = case_when(
+              has_amr_logo ~ amr_logo,
+              has_sdg_logo ~ sdg_logo,
+              TRUE ~ NA_character_
+            ),
             size = case_when(
-              is_selected ~ ifelse(node_group == "AMR", 49, 45),
-              node_group == "AMR" & active ~ 43,
-              node_group == "AMR" ~ 37,
-              active ~ 33,
+              is_selected ~ 45,
+              active ~ 38,
               TRUE ~ 31
             )
           ) %>%
@@ -1801,7 +1760,7 @@ server <- function(input, output, session) {
             mutate(
               effect_safe = ifelse(
                 is.na(effect),
-                "Mixed / context-dependent",
+                "Both synergy and conflict",
                 effect
               ),
               direct_or_indirect_safe = ifelse(
@@ -1816,13 +1775,13 @@ server <- function(input, output, session) {
                 direct_or_indirect_safe
               ),
               dashes = case_when(
-                effect_safe == "Mixed / context-dependent" ~ TRUE,
+                effect_safe == "Both synergy and conflict" ~ TRUE,
                 direct_or_indirect_safe == "Indirect" ~ TRUE,
                 TRUE ~ FALSE
               ),
               base_width = case_when(
                 effect_safe == "Conflict" ~ 3.2,
-                effect_safe == "Synergy (co-benefit)" ~ 2.6,
+                effect_safe == "Synergy" ~ 2.6,
                 TRUE ~ 2.0
               ),
               width = ifelse(
@@ -1886,7 +1845,12 @@ server <- function(input, output, session) {
 
         displayed_edges <- if (show_edges()) plot_edges else plot_edges[0, ]
 
-        visNetwork(plot_nodes, displayed_edges, width = "100%", height = "750px") %>%
+        visNetwork(
+          plot_nodes,
+          displayed_edges,
+          width = "100%",
+          height = "750px"
+        ) %>%
           visNodes(
             borderWidth = 1.2,
             borderWidthSelected = 2.4,
