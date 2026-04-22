@@ -1571,6 +1571,17 @@ server <- function(input, output, session) {
     if (!show_edges()) filtered_interactions()[0, ] else filtered_interactions()
   })
 
+  table_interactions <- reactive({
+    df <- displayed_interactions()
+    node_id <- normalize_node_selection(selected_node())
+
+    if (is.null(node_id) || !node_id %in% nodes$id) {
+      return(df)
+    }
+
+    df %>% filter(from == node_id | to == node_id)
+  })
+
   output$dynamic_title <- renderUI({
     chips <- list()
 
@@ -1673,6 +1684,15 @@ server <- function(input, output, session) {
         } else {
           selected_id
         }
+        connected_nodes <- if (!is.null(selected_id) && nrow(df) > 0) {
+          unique(c(
+            selected_id,
+            df$to[df$from == selected_id],
+            df$from[df$to == selected_id]
+          ))
+        } else {
+          active_nodes
+        }
 
         plot_nodes <- nodes %>%
           mutate(
@@ -1699,6 +1719,7 @@ server <- function(input, output, session) {
             ),
             active = id %in% active_nodes,
             is_selected = id == selected_id_safe,
+            is_connected = id %in% connected_nodes,
             sdg_bg = unname(sdg_palette[id]),
             base_bg = ifelse(
               is_sdg,
@@ -1715,6 +1736,14 @@ server <- function(input, output, session) {
               has_sdg_logo | has_amr_logo ~ "rgba(0,0,0,0)",
               active ~ "#FFFFFF",
               TRUE ~ "#6B7280"
+            ),
+            opacity = case_when(
+              is.null(selected_id) & active ~ 1,
+              is.null(selected_id) ~ 0.28,
+              is_selected ~ 1,
+              is_connected ~ 1,
+              active ~ 0.18,
+              TRUE ~ 0.08
             ),
             shape = case_when(
               has_amr_logo ~ "circularImage",
@@ -1740,6 +1769,7 @@ server <- function(input, output, session) {
             shape,
             image,
             size,
+            opacity,
             color.background,
             color.border,
             font.color
@@ -1857,7 +1887,11 @@ server <- function(input, output, session) {
           ) %>%
           visLayout(randomSeed = 42, improvedLayout = TRUE) %>%
           visOptions(
-            highlightNearest = list(enabled = TRUE, hover = TRUE)
+            highlightNearest = list(
+              enabled = TRUE,
+              degree = 1,
+              hover = FALSE
+            )
           ) %>%
           visInteraction(
             hover = TRUE,
@@ -2098,7 +2132,7 @@ server <- function(input, output, session) {
   })
 
   output$interaction_table <- renderDT({
-    tbl <- displayed_interactions() %>%
+    tbl <- table_interactions() %>%
       transmute(
         Country = country,
         Theme = theme,
