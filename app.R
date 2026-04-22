@@ -378,7 +378,7 @@ ui <- page_navbar(
     heading_font = font_google("Inter")
   ),
   header = tagList(
-    tags$link(rel = "stylesheet", type = "text/css", href = "styles.css?v=6")
+    tags$link(rel = "stylesheet", type = "text/css", href = "styles.css?v=8")
   ),
 
   nav_panel(
@@ -583,7 +583,7 @@ ui <- page_navbar(
             div(
               class = "network-stage",
               shinycssloaders::withSpinner(
-                visNetworkOutput("interaction_network", height = "620px"),
+                visNetworkOutput("interaction_network", height = "750px"),
                 type = 4,
                 color = "#A4343A"
               ),
@@ -1904,7 +1904,7 @@ server <- function(input, output, session) {
           )
         }
 
-        visNetwork(plot_nodes, plot_edges, width = "100%", height = "620px") %>%
+        visNetwork(plot_nodes, plot_edges, width = "100%", height = "750px") %>%
           visNodes(
             borderWidth = 1.2,
             borderWidthSelected = 2.4,

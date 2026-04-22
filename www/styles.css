@@ -26,7 +26,15 @@ body {
 
 body {
   font-type: "Inter", "Source Sans 3", "Segoe UI", Arial, sans-serif;
-  font-size: 14px;
+  font-size: 13px;
+}
+
+/* Strip bslib/Bootstrap tab-panel top padding */
+.tab-content,
+.tab-content > .tab-pane,
+.bslib-page-fill > .tab-content,
+.bslib-sidebar-layout {
+  padding-top: 0 !important;
 }
 
 /* Navbar */
@@ -278,13 +286,13 @@ body {
 
 /* Core layout */
 .page-wrap {
-  padding: 18px;
+  padding: 8px 14px 14px 14px;
 }
 
 .main-content {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 .title-block,
@@ -297,20 +305,20 @@ body {
 }
 
 .title-block {
-  padding: 16px;
+  padding: 10px 14px;
 }
 
 .title-block h2 {
-  font-size: clamp(22px, 2.1vw, 28px);
+  font-size: clamp(17px, 1.7vw, 21px);
   margin: 0;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 
 .title-block p {
-  margin: 7px 0 0 0;
+  margin: 4px 0 0 0;
   color: var(--text-soft);
-  font-size: 13.5px;
+  font-size: 12px;
 }
 
 .network-card,
@@ -620,6 +628,43 @@ body {
 .network-stage {
   position: relative;
   overflow: hidden;
+}
+
+/* Move vis.js navigation buttons to top */
+.vis-network div.vis-navigation div.vis-button.vis-up {
+  bottom: unset;
+  top: 10px;
+  left: 55px;
+}
+.vis-network div.vis-navigation div.vis-button.vis-down {
+  bottom: unset;
+  top: 50px;
+  left: 55px;
+}
+.vis-network div.vis-navigation div.vis-button.vis-left {
+  bottom: unset;
+  top: 50px;
+  left: 15px;
+}
+.vis-network div.vis-navigation div.vis-button.vis-right {
+  bottom: unset;
+  top: 50px;
+  left: 95px;
+}
+.vis-network div.vis-navigation div.vis-button.vis-zoomExtends {
+  bottom: unset;
+  top: 10px;
+  right: 15px;
+}
+.vis-network div.vis-navigation div.vis-button.vis-zoomOut {
+  bottom: unset;
+  top: 50px;
+  right: 15px;
+}
+.vis-network div.vis-navigation div.vis-button.vis-zoomIn {
+  bottom: unset;
+  top: 90px;
+  right: 15px;
 }
 
 /* visNetwork tooltip readability */
