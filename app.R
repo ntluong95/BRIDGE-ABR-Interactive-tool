@@ -580,23 +580,26 @@ ui <- page_navbar(
             )
           ),
 
-          div(
-            class = "data-card",
-            h4("Filtered policy interactions"),
-            shinycssloaders::withSpinner(
-              DTOutput("interaction_table"),
-              type = 4,
-              color = "#A4343A"
-            )
-          ),
+          conditionalPanel(
+            condition = "output.edges_visible",
+            div(
+              class = "data-card",
+              h4("Filtered policy interactions"),
+              shinycssloaders::withSpinner(
+                DTOutput("interaction_table"),
+                type = 4,
+                color = "#A4343A"
+              )
+            ),
 
-          div(
-            class = "data-card",
-            h4("Country summary in current filtered view"),
-            shinycssloaders::withSpinner(
-              DTOutput("country_summary_table"),
-              type = 4,
-              color = "#A4343A"
+            div(
+              class = "data-card",
+              h4("Country summary in current filtered view"),
+              shinycssloaders::withSpinner(
+                DTOutput("country_summary_table"),
+                type = 4,
+                color = "#A4343A"
+              )
             )
           )
         )
@@ -1422,6 +1425,9 @@ server <- function(input, output, session) {
   selected_node <- reactiveVal(NULL)
   show_edges   <- reactiveVal(FALSE)
 
+  output$edges_visible <- reactive({ show_edges() })
+  outputOptions(output, "edges_visible", suspendWhenHidden = FALSE)
+
   observeEvent(input$open_project_about, {
     showModal(
       modalDialog(
@@ -1643,6 +1649,10 @@ server <- function(input, output, session) {
     df
   })
 
+  displayed_interactions <- reactive({
+    if (!show_edges()) filtered_interactions()[0, ] else filtered_interactions()
+  })
+
   output$dynamic_title <- renderUI({
     country_label <- compact_selection(applied_filters$country, country_choices)
     type_label <- compact_selection(applied_filters$type, type_choices)
@@ -1669,21 +1679,21 @@ server <- function(input, output, session) {
   })
 
   output$metric_synergy <- renderText({
-    format_count(sum(filtered_interactions()$effect == "Synergy (co-benefit)"))
+    format_count(sum(displayed_interactions()$effect == "Synergy (co-benefit)"))
   })
 
   output$metric_tradeoff <- renderText({
-    format_count(sum(filtered_interactions()$effect == "Conflict"))
+    format_count(sum(displayed_interactions()$effect == "Conflict"))
   })
 
   output$metric_mixed <- renderText({
     format_count(sum(
-      filtered_interactions()$effect == "Mixed / context-dependent"
+      displayed_interactions()$effect == "Mixed / context-dependent"
     ))
   })
 
   output$metric_total <- renderText({
-    format_count(nrow(filtered_interactions()))
+    format_count(nrow(displayed_interactions()))
   })
 
   edge_color_with_alpha <- function(effect_vec, mode_vec) {
@@ -2106,7 +2116,7 @@ server <- function(input, output, session) {
   })
 
   output$interaction_table <- renderDT({
-    tbl <- filtered_interactions() %>%
+    tbl <- displayed_interactions() %>%
       transmute(
         `Edge ID` = edge_id,
         Country = country,
@@ -2156,7 +2166,7 @@ server <- function(input, output, session) {
   })
 
   output$country_summary_table <- renderDT({
-    tbl <- filtered_interactions() %>%
+    tbl <- displayed_interactions() %>%
       count(country, interaction_type, effect, theme, sort = TRUE) %>%
       rename(
         Country = country,
