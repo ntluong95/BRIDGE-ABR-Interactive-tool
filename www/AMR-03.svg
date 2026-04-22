@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <circle cx="200" cy="200" r="200" fill="#031816"/>
+  <text x="68" y="122" font-family="Arial,sans-serif" font-size="88" font-weight="bold" fill="white" text-anchor="start" opacity="0.95">3</text>
+  <text x="200" y="172" font-family="Arial,sans-serif" font-size="38" font-weight="bold" fill="white" text-anchor="middle">INFECTION</text>
+  <text x="200" y="218" font-family="Arial,sans-serif" font-size="38" font-weight="bold" fill="white" text-anchor="middle">PREVENTION</text>
+  <g transform="translate(200,335) scale(0.56)">
+    <path d="M0,-95 L80,-58 L80,18 Q80,82 0,108 Q-80,82 -80,18 L-80,-58 Z"
+          fill="none" stroke="white" stroke-width="14" stroke-linejoin="round"/>
+    <polyline points="-36,12 -10,40 44,-28"
+              fill="none" stroke="white" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

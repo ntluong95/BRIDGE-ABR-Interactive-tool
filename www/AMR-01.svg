@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <circle cx="200" cy="200" r="200" fill="#031816"/>
+  <text x="68" y="122" font-family="Arial,sans-serif" font-size="88" font-weight="bold" fill="white" text-anchor="start" opacity="0.95">1</text>
+  <text x="200" y="172" font-family="Arial,sans-serif" font-size="38" font-weight="bold" fill="white" text-anchor="middle">AWARENESS</text>
+  <text x="200" y="218" font-family="Arial,sans-serif" font-size="38" font-weight="bold" fill="white" text-anchor="middle">&amp; EDUCATION</text>
+  <g transform="translate(200,335) scale(0.56)">
+    <path d="M-90,-65 L-10,-50 L-10,85 L-90,70 Z" fill="none" stroke="white" stroke-width="12" stroke-linejoin="round"/>
+    <path d="M10,-50 L90,-65 L90,70 L10,85 Z"   fill="none" stroke="white" stroke-width="12" stroke-linejoin="round"/>
+    <line x1="-10" y1="-50" x2="-10" y2="85" stroke="white" stroke-width="10"/>
+    <line x1="10"  y1="-50" x2="10"  y2="85" stroke="white" stroke-width="10"/>
+    <line x1="-78" y1="-22" x2="-18" y2="-15" stroke="white" stroke-width="7" opacity="0.7"/>
+    <line x1="-78" y1="5"   x2="-18" y2="10"  stroke="white" stroke-width="7" opacity="0.7"/>
+    <line x1="-78" y1="32"  x2="-18" y2="36"  stroke="white" stroke-width="7" opacity="0.7"/>
+    <line x1="18"  y1="-15" x2="78"  y2="-22" stroke="white" stroke-width="7" opacity="0.7"/>
+    <line x1="18"  y1="10"  x2="78"  y2="5"   stroke="white" stroke-width="7" opacity="0.7"/>
+    <line x1="18"  y1="36"  x2="78"  y2="32"  stroke="white" stroke-width="7" opacity="0.7"/>
+  </g>
+</svg>
