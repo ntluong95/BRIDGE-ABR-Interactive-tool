@@ -1,4 +1,4 @@
-# A Goal Conflict Explorer
+# ABR Goal Conflict Explorer
 
 A modern Shiny dashboard for visualizing National Action Plan interactions between:
 

@@ -391,11 +391,11 @@ ui <- page_navbar(
     div(
       class = "app-brand-text",
       tags$span(class = "app-brand-kicker", "BRIDGE-ABR"),
-      tags$span(class = "app-brand-title", "A Goal Conflict Explorer")
+      tags$span(class = "app-brand-title", "ABR Goal Conflict Explorer")
     )
   ),
   id = "main_nav",
-  window_title = "A Goal Conflict Explorer",
+  window_title = "ABR Goal Conflict Explorer",
   navbar_options = navbar_options(collapsible = TRUE),
   theme = bs_theme(
     version = 5,
@@ -731,7 +731,7 @@ ui <- page_navbar(
           ),
           h1(
             class = "g-hero-title",
-            "Welcome to the A Goal Conflict Explorer"
+            "Welcome to the ABR Goal Conflict Explorer"
           ),
           p(
             class = "g-hero-subtitle",
@@ -1484,15 +1484,19 @@ server <- function(input, output, session) {
     updateSelectInput(session, "network_focus_node", selected = "")
   })
 
-  observeEvent(input$drawer_summary_info, {
-    selected_key <- input$drawer_summary_info
-    current_key <- active_interaction_summary()
-    if (identical(selected_key, current_key)) {
-      active_interaction_summary(NULL)
-    } else {
-      active_interaction_summary(selected_key)
-    }
-  }, ignoreInit = TRUE)
+  observeEvent(
+    input$drawer_summary_info,
+    {
+      selected_key <- input$drawer_summary_info
+      current_key <- active_interaction_summary()
+      if (identical(selected_key, current_key)) {
+        active_interaction_summary(NULL)
+      } else {
+        active_interaction_summary(selected_key)
+      }
+    },
+    ignoreInit = TRUE
+  )
 
   reset_filter_state <- function() {
     updatePickerInput(
@@ -1955,7 +1959,9 @@ server <- function(input, output, session) {
     }
     has_node_icon <- !is.na(node_icon) && nzchar(node_icon)
     rgb_vals <- grDevices::col2rgb(node_color)
-    luminance <- (0.299 * rgb_vals[1, 1]) + (0.587 * rgb_vals[2, 1]) + (0.114 * rgb_vals[3, 1])
+    luminance <- (0.299 * rgb_vals[1, 1]) +
+      (0.587 * rgb_vals[2, 1]) +
+      (0.114 * rgb_vals[3, 1])
     header_text_color <- if (luminance > 160) "#0f172a" else "#ffffff"
     chip_bg <- if (luminance > 160) {
       "rgba(255, 255, 255, 0.34)"
@@ -1980,7 +1986,11 @@ server <- function(input, output, session) {
         summary_key = paste(edge_id, source, sep = "::"),
         relation = paste0(from_short, " -> ", to_short),
         context = paste0(country, " | ", theme),
-        source = ifelse(is.na(source) | !nzchar(source), "Not specified", source),
+        source = ifelse(
+          is.na(source) | !nzchar(source),
+          "Not specified",
+          source
+        ),
         interaction_summary = ifelse(
           is.na(interaction_summary) | !nzchar(interaction_summary),
           "No interaction summary is available for this record.",
@@ -1993,7 +2003,13 @@ server <- function(input, output, session) {
       class = "node-drawer open",
       div(
         class = "drawer-header drawer-header-brand",
-        style = paste0("background:", node_color, ";color:", header_text_color, ";"),
+        style = paste0(
+          "background:",
+          node_color,
+          ";color:",
+          header_text_color,
+          ";"
+        ),
         div(
           class = "drawer-title-wrap",
           div(
@@ -2009,11 +2025,20 @@ server <- function(input, output, session) {
               },
               span(
                 class = "drawer-chip drawer-chip-brand",
-                style = paste0("background:", chip_bg, ";color:", header_text_color, ";"),
+                style = paste0(
+                  "background:",
+                  chip_bg,
+                  ";color:",
+                  header_text_color,
+                  ";"
+                ),
                 node_short_label
               )
             ),
-            h4(style = paste0("color:", header_text_color, ";"), node_info$label)
+            h4(
+              style = paste0("color:", header_text_color, ";"),
+              node_info$label
+            )
           )
         ),
         actionLink(
@@ -2085,7 +2110,8 @@ server <- function(input, output, session) {
               is_open <- identical(active_interaction_summary(), summary_key)
               layer_cls <- case_when(
                 layer_raw == "Objective" ~ "interaction-layer-objective",
-                layer_raw == "Implementation" ~ "interaction-layer-implementation",
+                layer_raw ==
+                  "Implementation" ~ "interaction-layer-implementation",
                 TRUE ~ "interaction-layer-unspecified"
               )
               div(
@@ -2241,7 +2267,15 @@ server <- function(input, output, session) {
       )
     }
 
-    details_html <- function(summary, tension, obj1, obj2, act1, act2, reference) {
+    details_html <- function(
+      summary,
+      tension,
+      obj1,
+      obj2,
+      act1,
+      act2,
+      reference
+    ) {
       sprintf(
         paste0(
           "<div class='it-details-panel'>",
