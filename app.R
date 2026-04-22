@@ -1420,6 +1420,7 @@ server <- function(input, output, session) {
   )
 
   selected_node <- reactiveVal(NULL)
+  show_edges   <- reactiveVal(FALSE)
 
   observeEvent(input$open_project_about, {
     showModal(
@@ -1558,6 +1559,7 @@ server <- function(input, output, session) {
     applied_filters$bidirectional_only <- default_filters$bidirectional_only
     applied_filters$search_text <- default_filters$search_text
     selected_node(NULL)
+    show_edges(FALSE)
   }
 
   observeEvent(input$apply_filters, {
@@ -1570,6 +1572,7 @@ server <- function(input, output, session) {
     applied_filters$bidirectional_only <- isTRUE(input$bidirectional_only)
     applied_filters$search_text <- input$search_text
     selected_node(NULL)
+    show_edges(TRUE)
   })
 
   observeEvent(input$clear_filters, {
@@ -1705,7 +1708,11 @@ server <- function(input, output, session) {
     net <- tryCatch(
       {
         df <- filtered_interactions()
-        active_nodes <- unique(c(df$from, df$to, applied_filters$focus_nodes))
+        active_nodes <- if (!show_edges()) {
+          nodes$id
+        } else {
+          unique(c(df$from, df$to, applied_filters$focus_nodes))
+        }
         selected_id <- normalize_node_selection(selected_node())
         selected_id_safe <- if (is.null(selected_id)) {
           "__none__"
@@ -1867,7 +1874,9 @@ server <- function(input, output, session) {
           )
         }
 
-        visNetwork(plot_nodes, plot_edges, width = "100%", height = "750px") %>%
+        displayed_edges <- if (show_edges()) plot_edges else plot_edges[0, ]
+
+        visNetwork(plot_nodes, displayed_edges, width = "100%", height = "750px") %>%
           visNodes(
             borderWidth = 1.2,
             borderWidthSelected = 2.4,
