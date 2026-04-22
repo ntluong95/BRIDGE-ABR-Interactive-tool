@@ -1007,105 +1007,62 @@ ui <- page_navbar(
             )
           ),
 
-          # Line styles column
           div(
             class = "g-legend-panel",
-            h3(class = "g-legend-panel-title", "Line Styles"),
+            h3(class = "g-legend-panel-title", "Connections"),
             div(
               class = "g-legend-item",
               div(
-                class = "g-legend-linestyle",
+                class = "g-legend-line g-line-guide",
                 tags$svg(
-                  width = "48",
+                  width = "28",
                   height = "12",
-                  viewBox = "0 0 48 12",
+                  viewBox = "0 0 28 12",
                   tags$line(
-                    x1 = "0",
+                    x1 = "2",
                     y1 = "6",
-                    x2 = "48",
+                    x2 = "26",
                     y2 = "6",
                     stroke = "#64748b",
-                    `stroke-width` = "2.5"
+                    `stroke-width` = "2.5",
+                    `stroke-dasharray` = "6 4",
+                    `stroke-linecap` = "round"
                   )
                 )
               ),
               div(
                 class = "g-legend-detail",
-                tags$strong("Solid"),
+                tags$strong("Objective layer"),
                 p(
-                  "Direct interaction \u2014 explicitly linked in the policy document."
+                  "Dashed edges represent objective-level interactions."
                 )
               )
             ),
             div(
               class = "g-legend-item",
               div(
-                class = "g-legend-linestyle",
+                class = "g-legend-line g-line-guide",
                 tags$svg(
-                  width = "48",
+                  width = "28",
                   height = "12",
-                  viewBox = "0 0 48 12",
+                  viewBox = "0 0 28 12",
                   tags$line(
-                    x1 = "0",
+                    x1 = "2",
                     y1 = "6",
-                    x2 = "48",
+                    x2 = "26",
                     y2 = "6",
                     stroke = "#64748b",
                     `stroke-width` = "2.5",
-                    `stroke-dasharray` = "6 4"
+                    `stroke-linecap` = "round"
                   )
                 )
               ),
               div(
                 class = "g-legend-detail",
-                tags$strong("Dashed"),
-                p("Indirect \u2014 mediated through a third factor.")
-              )
-            ),
-            div(
-              class = "g-legend-item",
-              div(
-                class = "g-legend-linestyle",
-                tags$svg(
-                  width = "48",
-                  height = "12",
-                  viewBox = "0 0 48 12",
-                  tags$line(
-                    x1 = "4",
-                    y1 = "6",
-                    x2 = "44",
-                    y2 = "6",
-                    stroke = "#64748b",
-                    `stroke-width` = "2.5",
-                    `marker-start` = "url(#arrowL)",
-                    `marker-end` = "url(#arrowR)"
-                  ),
-                  tags$defs(
-                    tags$marker(
-                      id = "arrowR",
-                      markerWidth = "6",
-                      markerHeight = "6",
-                      refX = "5",
-                      refY = "3",
-                      orient = "auto",
-                      tags$path(d = "M0,0 L6,3 L0,6", fill = "#64748b")
-                    ),
-                    tags$marker(
-                      id = "arrowL",
-                      markerWidth = "6",
-                      markerHeight = "6",
-                      refX = "1",
-                      refY = "3",
-                      orient = "auto",
-                      tags$path(d = "M6,0 L0,3 L6,6", fill = "#64748b")
-                    )
-                  )
+                tags$strong("Implementation layer"),
+                p(
+                  "Solid edges represent implementation-level interactions. "
                 )
-              ),
-              div(
-                class = "g-legend-detail",
-                tags$strong("Bidirectional"),
-                p("Both objectives influence each other.")
               )
             )
           )
@@ -1240,7 +1197,7 @@ ui <- page_navbar(
             class = "g-principle",
             div(class = "g-principle-num", "04"),
             p(
-              "Bidirectional edges reinforce each other, but each direction may differ in strength \u2014 check the individual records."
+              "Line style shows policy layer: dashed edges are objective-level interactions and solid edges are implementation-level interactions."
             )
           ),
           div(
@@ -1673,22 +1630,15 @@ server <- function(input, output, session) {
     format_count(nrow(displayed_interactions()))
   })
 
-  edge_color_with_alpha <- function(effect_vec, mode_vec) {
+  edge_color_with_alpha <- function(effect_vec) {
     effect_norm <- ifelse(
       is.na(effect_vec),
       "Both synergy and conflict",
       effect_vec
     )
-    mode_norm <- ifelse(is.na(mode_vec), "Direct", mode_vec)
     base_cols <- unname(effect_palette[effect_norm])
     base_cols[is.na(base_cols)] <- "#94A3B8"
-    alphas <- ifelse(mode_norm == "Indirect", 0.4, 0.9)
-    mapply(
-      function(col, alpha_val) grDevices::adjustcolor(col, alpha.f = alpha_val),
-      base_cols,
-      alphas,
-      USE.NAMES = FALSE
-    )
+    unname(grDevices::adjustcolor(base_cols, alpha.f = 0.9))
   }
 
   output$interaction_network <- renderVisNetwork({
@@ -1785,33 +1735,12 @@ server <- function(input, output, session) {
                 is.na(effect),
                 "Both synergy and conflict",
                 effect
-              ),
-              direct_or_indirect_safe = ifelse(
-                is.na(direct_or_indirect),
-                "Direct",
-                direct_or_indirect
               )
             ) %>%
             mutate(
-              edge_color = edge_color_with_alpha(
-                effect_safe,
-                direct_or_indirect_safe
-              ),
-              dashes = case_when(
-                effect_safe == "Both synergy and conflict" ~ TRUE,
-                direct_or_indirect_safe == "Indirect" ~ TRUE,
-                TRUE ~ FALSE
-              ),
-              base_width = case_when(
-                effect_safe == "Conflict" ~ 3.2,
-                effect_safe == "Synergy" ~ 2.6,
-                TRUE ~ 2.0
-              ),
-              width = ifelse(
-                direct_or_indirect_safe == "Indirect",
-                pmax(1.2, base_width - 1.0),
-                base_width
-              ),
+              edge_color = edge_color_with_alpha(effect_safe),
+              width = 2.6,
+              dashes = source == "Objective",
               edge_title = paste0(
                 "<b>",
                 from_short,
@@ -1824,11 +1753,24 @@ server <- function(input, output, session) {
                 "Theme: ",
                 theme,
                 "<br>",
-                "type: ",
+                "Type: ",
                 interaction_type,
                 "<br>",
                 "Effect: ",
                 effect,
+                "<br>",
+                "Policy layer: ",
+                ifelse(is.na(source), "Not specified", source),
+                "<br>",
+                "Direct or indirect: ",
+                ifelse(
+                  is.na(direct_or_indirect),
+                  "Not specified",
+                  direct_or_indirect
+                ),
+                "<br>",
+                "Bidirectional: ",
+                ifelse(isTRUE(bidirectional), "Yes", "No"),
                 "<br>",
                 "Policy tension: ",
                 policy_tension,
@@ -1849,7 +1791,6 @@ server <- function(input, output, session) {
               to,
               title = edge_title,
               dashes,
-              arrows = ifelse(bidirectional, "to;from", "to"),
               color = edge_color,
               width
             )
@@ -1860,7 +1801,6 @@ server <- function(input, output, session) {
             to = character(),
             title = character(),
             dashes = logical(),
-            arrows = character(),
             color = character(),
             width = numeric()
           )
@@ -1947,13 +1887,34 @@ server <- function(input, output, session) {
     }
 
     node_info <- nodes %>% filter(id == node_id)
+    node_group <- node_info$node_group[[1]]
+    node_short_label <- node_info$short_label[[1]]
+    node_color <- if (identical(node_group, "SDG")) {
+      unname(sdg_palette[node_short_label])
+    } else {
+      amr_color
+    }
+    if (is.na(node_color) || !nzchar(node_color)) {
+      node_color <- "#334155"
+    }
+    node_icon <- if (identical(node_group, "SDG")) {
+      unname(sdg_logo_map[node_id])
+    } else {
+      unname(amr_logo_map[node_id])
+    }
+    has_node_icon <- !is.na(node_icon) && nzchar(node_icon)
+    rgb_vals <- grDevices::col2rgb(node_color)
+    luminance <- (0.299 * rgb_vals[1, 1]) + (0.587 * rgb_vals[2, 1]) + (0.114 * rgb_vals[3, 1])
+    header_text_color <- if (luminance > 160) "#0f172a" else "#ffffff"
+    chip_bg <- if (luminance > 160) {
+      "rgba(255, 255, 255, 0.34)"
+    } else {
+      "rgba(255, 255, 255, 0.22)"
+    }
+
     related <- filtered_interactions() %>%
       filter(from == node_id | to == node_id) %>%
       arrange(desc(evidence_level))
-
-    top_refs <- related %>%
-      count(reference, sort = TRUE) %>%
-      slice_head(n = 3)
 
     top_context <- related %>%
       count(country, theme, sort = TRUE) %>%
@@ -1963,14 +1924,16 @@ server <- function(input, output, session) {
     tensions <- tensions[!is.na(tensions) & nzchar(tensions)]
     tensions <- head(tensions, 4)
 
-    evidence_mix <- related %>%
-      count(evidence_level, sort = TRUE)
-
     related_preview <- related %>%
       transmute(
         relation = paste0(from_short, " -> ", to_short),
         context = paste0(country, " | ", theme),
-        evidence_level
+        source = ifelse(is.na(source) | !nzchar(source), "Not specified", source),
+        interaction_summary = ifelse(
+          is.na(interaction_summary) | !nzchar(interaction_summary),
+          "No interaction summary is available for this record.",
+          interaction_summary
+        )
       ) %>%
       slice_head(n = 6)
 
@@ -1978,12 +1941,35 @@ server <- function(input, output, session) {
       class = "node-drawer open",
       div(
         class = "drawer-header drawer-header-brand",
+        style = paste0("background:", node_color, ";color:", header_text_color, ";"),
         div(
           class = "drawer-title-wrap",
-          span(class = "drawer-chip drawer-chip-brand", node_info$short_label),
-          h4(node_info$label)
+          div(
+            class = "drawer-title-copy",
+            div(
+              class = "drawer-title-meta",
+              if (has_node_icon) {
+                img(
+                  class = "drawer-node-icon",
+                  src = node_icon,
+                  alt = paste(node_short_label, "icon")
+                )
+              },
+              span(
+                class = "drawer-chip drawer-chip-brand",
+                style = paste0("background:", chip_bg, ";color:", header_text_color, ";"),
+                node_short_label
+              )
+            ),
+            h4(style = paste0("color:", header_text_color, ";"), node_info$label)
+          )
         ),
-        actionLink("clear_selected_node", "Close", class = "drawer-close-link")
+        actionLink(
+          "clear_selected_node",
+          "Close",
+          class = "drawer-close-link",
+          style = paste0("color:", header_text_color, " !important;")
+        )
       ),
       p(class = "drawer-description", node_info$description),
       div(
@@ -2035,42 +2021,6 @@ server <- function(input, output, session) {
       ),
       div(
         class = "drawer-section",
-        h5("Evidence mix"),
-        if (nrow(evidence_mix) == 0) {
-          p("No evidence labels in current filters.")
-        } else {
-          div(
-            class = "evidence-chip-wrap",
-            lapply(seq_len(nrow(evidence_mix)), function(i) {
-              ev_raw <- evidence_mix$evidence_level[i]
-              ev_cls <- paste0(
-                "evidence-",
-                tolower(gsub("[^A-Za-z]", "", ev_raw))
-              )
-              span(
-                class = paste("evidence-chip", ev_cls),
-                paste0(ev_raw, ": ", evidence_mix$n[i])
-              )
-            })
-          )
-        }
-      ),
-      div(
-        class = "drawer-section",
-        h5("Top references"),
-        if (nrow(top_refs) == 0) {
-          p("No references in current filters.")
-        } else {
-          tags$ul(
-            class = "drawer-list",
-            lapply(seq_len(nrow(top_refs)), function(i) {
-              tags$li(paste0(top_refs$reference[i], " (", top_refs$n[i], ")"))
-            })
-          )
-        }
-      ),
-      div(
-        class = "drawer-section",
         h5("Related interactions"),
         if (nrow(related_preview) == 0) {
           p("No related interactions under current filters.")
@@ -2078,10 +2028,11 @@ server <- function(input, output, session) {
           div(
             class = "interaction-list",
             lapply(seq_len(nrow(related_preview)), function(i) {
-              ev_raw <- related_preview$evidence_level[i]
-              ev_cls <- paste0(
-                "evidence-",
-                tolower(gsub("[^A-Za-z]", "", ev_raw))
+              layer_raw <- related_preview$source[i]
+              layer_cls <- case_when(
+                layer_raw == "Objective" ~ "interaction-layer-objective",
+                layer_raw == "Implementation" ~ "interaction-layer-implementation",
+                TRUE ~ "interaction-layer-unspecified"
               )
               div(
                 class = "interaction-item",
@@ -2092,7 +2043,17 @@ server <- function(input, output, session) {
                     class = "interaction-context",
                     related_preview$context[i]
                   ),
-                  span(class = paste("evidence-chip", ev_cls), ev_raw)
+                  tags$details(
+                    class = "interaction-summary-toggle",
+                    tags$summary(
+                      class = paste("interaction-layer-pill", layer_cls),
+                      paste(layer_raw, "summary")
+                    ),
+                    div(
+                      class = "interaction-summary-body",
+                      related_preview$interaction_summary[i]
+                    )
+                  )
                 )
               )
             })
@@ -2105,15 +2066,12 @@ server <- function(input, output, session) {
   output$interaction_table <- renderDT({
     tbl <- displayed_interactions() %>%
       transmute(
-        `Edge ID` = edge_id,
         Country = country,
         Theme = theme,
         `Interaction Type` = interaction_type,
         `From Objective` = paste0(from_short, " - ", from_label),
         `To Objective` = paste0(to_short, " - ", to_label),
         Effect = effect,
-        `Direct or Indirect` = direct_or_indirect,
-        Bidirectional = ifelse(bidirectional, "Yes", "No"),
         `Policy Tension` = policy_tension,
         `Interaction Summary` = interaction_summary,
         `Policy Objective 1` = if_else(
