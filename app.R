@@ -2132,48 +2132,239 @@ server <- function(input, output, session) {
   })
 
   output$interaction_table <- renderDT({
+    text_value <- function(x, missing = "Not specified") {
+      if (is.na(x)) {
+        return(missing)
+      }
+      x <- stringr::str_squish(as.character(x))
+      if (nzchar(x)) x else missing
+    }
+
+    html_value <- function(x) {
+      htmltools::htmlEscape(text_value(x))
+    }
+
+    attr_value <- function(x) {
+      htmltools::htmlEscape(text_value(x), attribute = TRUE)
+    }
+
+    block_html <- function(title, value) {
+      text <- text_value(value, missing = "")
+      if (!nzchar(text)) {
+        content_html <- "<div class='it-details-empty'>Not available</div>"
+      } else {
+        list_parts <- if (stringr::str_detect(text, "•")) {
+          stringr::str_split(text, "\\s*•\\s*")[[1]]
+        } else if (stringr::str_detect(text, "\\r?\\n")) {
+          stringr::str_split(text, "\\s*\\r?\\n\\s*")[[1]]
+        } else if (nchar(text) > 220 && stringr::str_detect(text, ";")) {
+          stringr::str_split(text, "\\s*;\\s*")[[1]]
+        } else {
+          character()
+        }
+
+        list_parts <- stringr::str_squish(list_parts)
+        list_parts <- list_parts[nzchar(list_parts)]
+
+        if (length(list_parts) >= 2) {
+          content_html <- sprintf(
+            "<ul class='it-details-list'>%s</ul>",
+            paste0(
+              sprintf("<li>%s</li>", htmltools::htmlEscape(list_parts)),
+              collapse = ""
+            )
+          )
+        } else {
+          paragraph_parts <- stringr::str_split(text, "\\s*\\r?\\n\\s*")[[1]]
+          paragraph_parts <- stringr::str_squish(paragraph_parts)
+          paragraph_parts <- paragraph_parts[nzchar(paragraph_parts)]
+          content_html <- paste0(
+            sprintf(
+              "<p class='it-details-paragraph'>%s</p>",
+              htmltools::htmlEscape(paragraph_parts)
+            ),
+            collapse = ""
+          )
+        }
+      }
+
+      sprintf(
+        "<div class='it-details-block'><div class='it-details-title'>%s</div><div class='it-details-text'>%s</div></div>",
+        htmltools::htmlEscape(title),
+        content_html
+      )
+    }
+
+    pair_html <- function(from_short, from_label, to_short, to_label) {
+      sprintf(
+        paste0(
+          "<div class='it-pair'>",
+          "<div class='it-pair-code'>%s <span class='it-arrow'>&rarr;</span> %s</div>",
+          "<div class='it-pair-label'>%s <span class='it-pair-sep'>&middot;</span> %s</div>",
+          "</div>"
+        ),
+        html_value(from_short),
+        html_value(to_short),
+        html_value(from_label),
+        html_value(to_label)
+      )
+    }
+
+    context_html <- function(country, theme, interaction_type) {
+      sprintf(
+        paste0(
+          "<div class='it-context'>",
+          "<div class='it-context-main'>%s</div>",
+          "<div class='it-context-sub'>%s <span class='it-pair-sep'>&middot;</span> %s</div>",
+          "</div>"
+        ),
+        html_value(country),
+        html_value(theme),
+        html_value(interaction_type)
+      )
+    }
+
+    badge_html <- function(text, class_name) {
+      sprintf(
+        "<span class='it-badge %s'>%s</span>",
+        class_name,
+        html_value(text)
+      )
+    }
+
+    preview_html <- function(text, class_name) {
+      sprintf(
+        "<div class='%s' title='%s'>%s</div>",
+        class_name,
+        attr_value(text),
+        html_value(text)
+      )
+    }
+
+    details_html <- function(summary, tension, obj1, obj2, act1, act2, reference) {
+      sprintf(
+        paste0(
+          "<div class='it-details-panel'>",
+          "<div class='it-details-hero'>",
+          "%s%s",
+          "</div>",
+          "<div class='it-details-grid'>",
+          "%s%s%s%s%s",
+          "</div>",
+          "</div>"
+        ),
+        block_html("Interaction summary", summary),
+        block_html("Policy tension", tension),
+        block_html("Policy objective 1", obj1),
+        block_html("Policy objective 2", obj2),
+        block_html("Specific actions 1", act1),
+        block_html("Specific actions 2", act2),
+        block_html("Reference", reference)
+      )
+    }
+
     tbl <- table_interactions() %>%
+      mutate(
+        Layer = purrr::map2_chr(source, source, function(x, .y) {
+          x <- text_value(x)
+          dplyr::case_when(
+            identical(x, "Objective") ~ "it-badge-layer-objective",
+            identical(x, "Implementation") ~ "it-badge-layer-implementation",
+            TRUE ~ "it-badge-layer-unspecified"
+          )
+        }),
+        EffectClass = purrr::map_chr(effect, function(x) {
+          x <- text_value(x)
+          dplyr::case_when(
+            identical(x, "Conflict") ~ "it-badge-effect-conflict",
+            identical(x, "Synergy") ~ "it-badge-effect-synergy",
+            TRUE ~ "it-badge-effect-mixed"
+          )
+        })
+      ) %>%
       transmute(
-        Country = country,
-        Theme = theme,
-        `Interaction Type` = interaction_type,
-        `From Objective` = paste0(from_short, " - ", from_label),
-        `To Objective` = paste0(to_short, " - ", to_label),
-        Effect = effect,
-        `Policy Tension` = policy_tension,
-        `Interaction Summary` = interaction_summary,
-        `Policy Objective 1` = if_else(
-          is.na(policy_strategic_objective_1),
-          "",
-          policy_strategic_objective_1
+        Pair = purrr::pmap_chr(
+          list(from_short, from_label, to_short, to_label),
+          pair_html
         ),
-        `Policy Objective 2` = if_else(
-          is.na(policy_strategic_objective_2),
-          "",
-          policy_strategic_objective_2
+        Context = purrr::pmap_chr(
+          list(country, theme, interaction_type),
+          context_html
         ),
-        `Specific Actions 1` = if_else(
-          is.na(policy_specific_actions_1),
-          "",
-          policy_specific_actions_1
+        Layer = purrr::map2_chr(source, Layer, badge_html),
+        Effect = purrr::map2_chr(effect, EffectClass, badge_html),
+        Tension = purrr::map_chr(
+          policy_tension,
+          ~ preview_html(.x, "it-preview it-preview-tight")
         ),
-        `Specific Actions 2` = if_else(
-          is.na(policy_specific_actions_2),
-          "",
-          policy_specific_actions_2
+        Summary = purrr::map_chr(
+          interaction_summary,
+          ~ preview_html(.x, "it-preview it-preview-wide")
         ),
-        Reference = reference
+        Details = "<button type='button' class='it-details-btn' aria-expanded='false'><span class='it-details-btn-label'>Details</span></button>",
+        DetailsHtml = purrr::pmap_chr(
+          list(
+            interaction_summary,
+            policy_tension,
+            policy_strategic_objective_1,
+            policy_strategic_objective_2,
+            policy_specific_actions_1,
+            policy_specific_actions_2,
+            reference
+          ),
+          details_html
+        )
       )
 
     datatable(
       tbl,
+      escape = FALSE,
       rownames = FALSE,
-      filter = "top",
+      selection = "none",
+      filter = "none",
+      class = "compact stripe hover interaction-table",
+      callback = DT::JS(
+        "table.on('click', 'button.it-details-btn', function () {",
+        "  var btn = $(this);",
+        "  var tr = btn.closest('tr');",
+        "  var row = table.row(tr);",
+        "  var details = row.data()[7];",
+        "  table.rows('.shown').every(function(){",
+        "    if (this.index() !== row.index()) {",
+        "      $(this.node()).removeClass('shown');",
+        "      $(this.node()).find('button.it-details-btn').attr('aria-expanded', 'false').html(\"<span class='it-details-btn-label'>Details</span>\");",
+        "      this.child.hide();",
+        "    }",
+        "  });",
+        "  if (row.child.isShown()) {",
+        "    row.child.hide();",
+        "    tr.removeClass('shown');",
+        "    btn.attr('aria-expanded', 'false').html(\"<span class='it-details-btn-label'>Details</span>\");",
+        "  } else {",
+        "    row.child(details).show();",
+        "    tr.addClass('shown');",
+        "    btn.attr('aria-expanded', 'true').html(\"<span class='it-details-btn-label'>Hide</span>\");",
+        "  }",
+        "});"
+      ),
       options = list(
-        pageLength = 10,
-        lengthMenu = c(10, 25, 50),
+        pageLength = 8,
+        lengthMenu = c(8, 20, 40),
+        autoWidth = FALSE,
         scrollX = TRUE,
-        autoWidth = TRUE
+        order = list(list(0, "asc")),
+        columnDefs = list(
+          list(visible = FALSE, targets = 7),
+          list(orderable = FALSE, targets = c(6, 7)),
+          list(width = "19%", targets = 0),
+          list(width = "19%", targets = 1),
+          list(width = "11%", targets = 2),
+          list(width = "11%", targets = 3),
+          list(width = "16%", targets = 4),
+          list(width = "18%", targets = 5),
+          list(width = "6%", targets = 6)
+        ),
+        dom = "<'it-toolbar'lf>tip"
       )
     )
   })
