@@ -1053,24 +1053,16 @@ div.vis-tooltip b {
   color: #64748b;
 }
 
-.interaction-summary-toggle {
-  margin-left: auto;
-}
-
-.interaction-summary-toggle summary {
-  list-style: none;
-}
-
-.interaction-summary-toggle summary::-webkit-details-marker {
-  display: none;
-}
-
-.interaction-layer-pill {
+.interaction-info-button {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-height: 32px;
-  padding: 6px 12px;
+  justify-content: flex-start;
+  gap: 8px;
+  align-self: flex-start;
+  min-width: 132px;
+  min-height: 34px;
+  padding: 0 14px 0 10px;
+  margin-top: -2px;
   border-radius: 999px;
   border: 1px solid #d1d5db;
   background: #f8fafc;
@@ -1082,10 +1074,31 @@ div.vis-tooltip b {
   transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
 }
 
-.interaction-layer-pill:hover,
-.interaction-summary-toggle[open] .interaction-layer-pill {
+.interaction-info-button:hover,
+.interaction-info-button-open {
   transform: translateY(-1px);
   box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+}
+
+.interaction-info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  background: #334155;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.interaction-info-label {
+  line-height: 1;
+  white-space: nowrap;
+  text-align: left;
 }
 
 .interaction-layer-objective {
@@ -1106,16 +1119,36 @@ div.vis-tooltip b {
   color: #475569;
 }
 
-.interaction-summary-body {
-  margin-top: 8px;
-  padding: 9px 10px;
-  border-radius: 8px;
-  background: #ffffff;
+.interaction-layer-objective .interaction-info-icon,
+.interaction-info-button.interaction-layer-objective .interaction-info-icon {
+  background: #6d28d9;
+}
+
+.interaction-layer-implementation .interaction-info-icon,
+.interaction-info-button.interaction-layer-implementation .interaction-info-icon {
+  background: #166534;
+}
+
+.interaction-layer-unspecified .interaction-info-icon,
+.interaction-info-button.interaction-layer-unspecified .interaction-info-icon {
+  background: #475569;
+}
+
+.interaction-summary-popup {
+  margin-top: 9px;
+  margin-left: auto;
+  width: min(100%, 320px);
+  border-radius: 12px;
   border: 1px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  padding: 11px 12px;
+}
+
+.interaction-summary-body {
   color: #334155;
   font-size: 12px;
   line-height: 1.5;
-  max-width: 280px;
 }
 
 /* DataTables */

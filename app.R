@@ -1380,6 +1380,7 @@ server <- function(input, output, session) {
   )
 
   selected_node <- reactiveVal(NULL)
+  active_interaction_summary <- reactiveVal(NULL)
   show_edges <- reactiveVal(FALSE)
 
   output$edges_visible <- reactive({
@@ -1431,6 +1432,7 @@ server <- function(input, output, session) {
   observeEvent(input$network_node_selected, {
     node_id <- normalize_node_selection(input$network_node_selected)
     selected_node(node_id)
+    active_interaction_summary(NULL)
     updateSelectInput(
       session,
       "network_focus_node",
@@ -1440,6 +1442,7 @@ server <- function(input, output, session) {
 
   observeEvent(input$clear_selected_node, {
     selected_node(NULL)
+    active_interaction_summary(NULL)
     updateSelectInput(session, "network_focus_node", selected = "")
     safely_update_network({
       visNetworkProxy("interaction_network") %>% visUnselectAll() %>% visFit()
@@ -1455,6 +1458,7 @@ server <- function(input, output, session) {
       }
 
       selected_node(node_id)
+      active_interaction_summary(NULL)
 
       safely_update_network({
         proxy <- visNetworkProxy("interaction_network")
@@ -1476,8 +1480,19 @@ server <- function(input, output, session) {
 
   observeEvent(input$source_view, {
     selected_node(NULL)
+    active_interaction_summary(NULL)
     updateSelectInput(session, "network_focus_node", selected = "")
   })
+
+  observeEvent(input$drawer_summary_info, {
+    selected_key <- input$drawer_summary_info
+    current_key <- active_interaction_summary()
+    if (identical(selected_key, current_key)) {
+      active_interaction_summary(NULL)
+    } else {
+      active_interaction_summary(selected_key)
+    }
+  }, ignoreInit = TRUE)
 
   reset_filter_state <- function() {
     updatePickerInput(
@@ -1504,6 +1519,7 @@ server <- function(input, output, session) {
     applied_filters$theme <- default_filters$theme
     applied_filters$effect <- default_filters$effect
     selected_node(NULL)
+    active_interaction_summary(NULL)
     show_edges(FALSE)
   }
 
@@ -1513,6 +1529,7 @@ server <- function(input, output, session) {
     applied_filters$theme <- input$theme_filter
     applied_filters$effect <- input$effect_filter
     selected_node(NULL)
+    active_interaction_summary(NULL)
     show_edges(TRUE)
   })
 
@@ -1926,6 +1943,7 @@ server <- function(input, output, session) {
 
     related_preview <- related %>%
       transmute(
+        summary_key = paste(edge_id, source, sep = "::"),
         relation = paste0(from_short, " -> ", to_short),
         context = paste0(country, " | ", theme),
         source = ifelse(is.na(source) | !nzchar(source), "Not specified", source),
@@ -2029,6 +2047,8 @@ server <- function(input, output, session) {
             class = "interaction-list",
             lapply(seq_len(nrow(related_preview)), function(i) {
               layer_raw <- related_preview$source[i]
+              summary_key <- related_preview$summary_key[i]
+              is_open <- identical(active_interaction_summary(), summary_key)
               layer_cls <- case_when(
                 layer_raw == "Objective" ~ "interaction-layer-objective",
                 layer_raw == "Implementation" ~ "interaction-layer-implementation",
@@ -2043,18 +2063,32 @@ server <- function(input, output, session) {
                     class = "interaction-context",
                     related_preview$context[i]
                   ),
-                  tags$details(
-                    class = "interaction-summary-toggle",
-                    tags$summary(
-                      class = paste("interaction-layer-pill", layer_cls),
-                      paste(layer_raw, "summary")
+                  tags$button(
+                    type = "button",
+                    class = paste(
+                      "interaction-info-button",
+                      layer_cls,
+                      if (is_open) "interaction-info-button-open"
                     ),
+                    title = paste(layer_raw, "summary"),
+                    `aria-label` = paste(layer_raw, "summary"),
+                    onclick = sprintf(
+                      "Shiny.setInputValue('drawer_summary_info', '%s', {priority: 'event'});",
+                      summary_key
+                    ),
+                    span(class = "interaction-info-icon", "i"),
+                    span(class = "interaction-info-label", layer_raw)
+                  )
+                ),
+                if (is_open) {
+                  div(
+                    class = "interaction-summary-popup",
                     div(
                       class = "interaction-summary-body",
                       related_preview$interaction_summary[i]
                     )
                   )
-                )
+                }
               )
             })
           )
