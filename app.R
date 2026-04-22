@@ -74,7 +74,7 @@ normalize_effect <- function(effect_value) {
     effect_value %in%
       c("Align", "Synergy (co-benefit)") ~ "Synergy (co-benefit)",
     effect_value %in%
-      c("Conflict", "Tension (trade-off)") ~ "Tension (trade-off)",
+      c("Conflict", "Tension (trade-off)") ~ "Conflict",
     effect_value %in%
       c(
         "Independent",
@@ -199,7 +199,7 @@ type_choices <- intersect(
 country_choices <- sort(unique(interactions_enriched$country))
 theme_choices <- sort(unique(interactions_enriched$theme))
 effect_choices <- c(
-  "Tension (trade-off)",
+  "Conflict",
   "Synergy (co-benefit)",
   "Mixed / context-dependent"
 )
@@ -241,7 +241,7 @@ sdg_palette <- c(
 
 amr_color <- "#031816"
 effect_palette <- c(
-  "Tension (trade-off)" = "#C62828",
+  "Conflict" = "#C62828",
   "Synergy (co-benefit)" = "#2E7D32",
   "Mixed / context-dependent" = "#F9A825"
 )
@@ -362,11 +362,11 @@ ui <- page_navbar(
     div(
       class = "app-brand-text",
       tags$span(class = "app-brand-kicker", "BRIDGE-ABR"),
-      tags$span(class = "app-brand-title", "ABR Goal Conflict Explorer")
+      tags$span(class = "app-brand-title", "A Goal Conflict Explorer")
     )
   ),
   id = "main_nav",
-  window_title = "ABR Goal Conflict Explorer",
+  window_title = "A Goal Conflict Explorer",
   navbar_options = navbar_options(collapsible = TRUE),
   theme = bs_theme(
     version = 5,
@@ -533,7 +533,7 @@ ui <- page_navbar(
           div(
             class = "metrics-grid",
             metric_card("metric_synergy", "Synergies", "metric-synergy"),
-            metric_card("metric_tradeoff", "Trade-offs", "metric-tradeoff"),
+            metric_card("metric_tradeoff", "Conflicts", "metric-tradeoff"),
             metric_card("metric_mixed", "Mixed", "metric-mixed"),
             metric_card("metric_total", "Total interactions", "metric-total")
           ),
@@ -596,7 +596,7 @@ ui <- page_navbar(
             span(class = "legend-pill legend-line-solid", "Direct"),
             span(class = "legend-pill legend-line-dashed", "Indirect"),
             span(class = "legend-pill legend-synergy", "Synergy"),
-            span(class = "legend-pill legend-tradeoff", "Trade-off"),
+            span(class = "legend-pill legend-tradeoff", "Conflict"),
             span(class = "legend-pill legend-mixed", "Mixed"),
             span(class = "legend-pill legend-amr", "AMR objective"),
             span(class = "legend-pill legend-sdg", "SDG goal")
@@ -750,7 +750,7 @@ ui <- page_navbar(
           ),
           h1(
             class = "g-hero-title",
-            "Welcome to the ABR Goal Conflict Explorer"
+            "Welcome to the A Goal Conflict Explorer"
           ),
           p(
             class = "g-hero-subtitle",
@@ -1006,7 +1006,7 @@ ui <- page_navbar(
               div(class = "g-legend-line g-line-tradeoff"),
               div(
                 class = "g-legend-detail",
-                tags$strong("Trade-off"),
+                tags$strong("Conflict"),
                 p("The two objectives are in tension.")
               )
             ),
@@ -1707,7 +1707,7 @@ server <- function(input, output, session) {
   })
 
   output$metric_tradeoff <- renderText({
-    format_count(sum(filtered_interactions()$effect == "Tension (trade-off)"))
+    format_count(sum(filtered_interactions()$effect == "Conflict"))
   })
 
   output$metric_mixed <- renderText({
@@ -1841,7 +1841,7 @@ server <- function(input, output, session) {
                 TRUE ~ FALSE
               ),
               base_width = case_when(
-                effect_safe == "Tension (trade-off)" ~ 3.2,
+                effect_safe == "Conflict" ~ 3.2,
                 effect_safe == "Synergy (co-benefit)" ~ 2.6,
                 TRUE ~ 2.0
               ),
