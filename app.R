@@ -207,12 +207,6 @@ effect_choices <- intersect(
   effect_choices,
   sort(unique(interactions_enriched$effect))
 )
-evidence_priority <- c("High", "Medium", "Low", "Emerging")
-evidence_present <- sort(unique(interactions_enriched$evidence_level))
-evidence_choices <- c(
-  evidence_priority[evidence_priority %in% evidence_present],
-  sort(setdiff(evidence_present, evidence_priority))
-)
 objective_choices <- setNames(
   nodes$id,
   paste0(nodes$short_label, " - ", nodes$label)
@@ -493,19 +487,6 @@ ui <- page_navbar(
                 label = NULL,
                 choices = effect_choices,
                 selected = effect_choices,
-                multiple = TRUE,
-                options = picker_options
-              )
-            ),
-
-            accordion_panel(
-              title = filter_title("patch-check", "Evidence level"),
-              value = "Evidence",
-              pickerInput(
-                "evidence_filter",
-                label = NULL,
-                choices = evidence_choices,
-                selected = evidence_choices,
                 multiple = TRUE,
                 options = picker_options
               )
@@ -1421,7 +1402,6 @@ server <- function(input, output, session) {
     country = country_choices,
     theme = theme_choices,
     effect = effect_choices,
-    evidence = evidence_choices,
     focus_nodes = character(0),
     context_only = FALSE,
     bidirectional_only = FALSE,
@@ -1433,7 +1413,6 @@ server <- function(input, output, session) {
     country = default_filters$country,
     theme = default_filters$theme,
     effect = default_filters$effect,
-    evidence = default_filters$evidence,
     focus_nodes = default_filters$focus_nodes,
     context_only = default_filters$context_only,
     bidirectional_only = default_filters$bidirectional_only,
@@ -1553,11 +1532,6 @@ server <- function(input, output, session) {
     )
     updatePickerInput(
       session,
-      "evidence_filter",
-      selected = default_filters$evidence
-    )
-    updatePickerInput(
-      session,
       "focus_nodes",
       selected = default_filters$focus_nodes
     )
@@ -1579,7 +1553,6 @@ server <- function(input, output, session) {
     applied_filters$country <- default_filters$country
     applied_filters$theme <- default_filters$theme
     applied_filters$effect <- default_filters$effect
-    applied_filters$evidence <- default_filters$evidence
     applied_filters$focus_nodes <- default_filters$focus_nodes
     applied_filters$context_only <- default_filters$context_only
     applied_filters$bidirectional_only <- default_filters$bidirectional_only
@@ -1592,7 +1565,6 @@ server <- function(input, output, session) {
     applied_filters$country <- input$country_filter
     applied_filters$theme <- input$theme_filter
     applied_filters$effect <- input$effect_filter
-    applied_filters$evidence <- input$evidence_filter
     applied_filters$focus_nodes <- input$focus_nodes
     applied_filters$context_only <- isTRUE(input$context_only)
     applied_filters$bidirectional_only <- isTRUE(input$bidirectional_only)
@@ -1631,12 +1603,6 @@ server <- function(input, output, session) {
 
     if (length(applied_filters$effect) > 0) {
       df <- df %>% filter(effect %in% applied_filters$effect)
-    } else {
-      df <- df[0, ]
-    }
-
-    if (length(applied_filters$evidence) > 0) {
-      df <- df %>% filter(evidence_level %in% applied_filters$evidence)
     } else {
       df <- df[0, ]
     }
