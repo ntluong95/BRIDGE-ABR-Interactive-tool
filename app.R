@@ -75,7 +75,7 @@ normalize_effect <- function(effect_value) {
       c("Align", "Synergy") ~ "Synergy",
     effect_value %in%
       c("Conflict", "Tension (trade-off)") ~ "Conflict",
-    effect_value %in% c("Independent") ~ "Independent",
+    effect_value %in% c("Independent", "Indepedent") ~ "Independent",
     effect_value %in% c("Both synergy and conflict") ~
       "Both synergy and conflict",
     TRUE ~ effect_value
@@ -2382,7 +2382,7 @@ server <- function(input, output, session) {
           )
         }),
         EffectClass = purrr::map_chr(effect, function(x) {
-          x <- text_value(x)
+          x <- normalize_effect(text_value(x))
           dplyr::case_when(
             identical(x, "Conflict") ~ "it-badge-effect-conflict",
             identical(x, "Synergy") ~ "it-badge-effect-synergy",
