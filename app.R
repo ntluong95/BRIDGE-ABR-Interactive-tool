@@ -2280,7 +2280,7 @@ server <- function(input, output, session) {
         paste0(
           "<div class='it-details-panel'>",
           "<div class='it-details-hero'>",
-          "%s%s",
+          "%s",
           "</div>",
           "<div class='it-details-grid'>",
           "%s%s%s%s%s",
@@ -2288,7 +2288,6 @@ server <- function(input, output, session) {
           "</div>"
         ),
         block_html("Interaction summary", summary),
-        block_html("Policy tension", tension),
         block_html("Policy objective 1", obj1),
         block_html("Policy objective 2", obj2),
         block_html("Specific actions 1", act1),
