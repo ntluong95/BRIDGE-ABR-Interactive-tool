@@ -2174,7 +2174,7 @@ server <- function(input, output, session) {
       htmltools::htmlEscape(text_value(x), attribute = TRUE)
     }
 
-    block_html <- function(title, value) {
+    block_html <- function(title, value, extra_class = "") {
       text <- text_value(value, missing = "")
       if (!nzchar(text)) {
         content_html <- "<div class='it-details-empty'>Not available</div>"
@@ -2215,7 +2215,8 @@ server <- function(input, output, session) {
       }
 
       sprintf(
-        "<div class='it-details-block'><div class='it-details-title'>%s</div><div class='it-details-text'>%s</div></div>",
+        "<div class='it-details-block %s'><div class='it-details-title'>%s</div><div class='it-details-text'>%s</div></div>",
+        extra_class,
         htmltools::htmlEscape(title),
         content_html
       )
@@ -2274,8 +2275,15 @@ server <- function(input, output, session) {
       obj2,
       act1,
       act2,
-      reference
+      reference,
+      from_short,
+      to_short,
+      source
     ) {
+      layer <- text_value(source)
+      obj_class <- if (identical(layer, "Objective")) "it-details-block-layer-objective" else ""
+      act_class <- if (identical(layer, "Implementation")) "it-details-block-layer-implementation" else ""
+
       sprintf(
         paste0(
           "<div class='it-details-panel'>",
@@ -2288,10 +2296,10 @@ server <- function(input, output, session) {
           "</div>"
         ),
         block_html("Interaction summary", summary),
-        block_html("Policy objective 1", obj1),
-        block_html("Policy objective 2", obj2),
-        block_html("Specific actions 1", act1),
-        block_html("Specific actions 2", act2),
+        block_html(paste0(text_value(from_short), " – objective"), obj1, obj_class),
+        block_html(paste0(text_value(to_short),   " – objective"), obj2, obj_class),
+        block_html(paste0(text_value(from_short), " – specific actions"), act1, act_class),
+        block_html(paste0(text_value(to_short),   " – specific actions"), act2, act_class),
         block_html("Reference", reference)
       )
     }
@@ -2343,7 +2351,10 @@ server <- function(input, output, session) {
             policy_strategic_objective_2,
             policy_specific_actions_1,
             policy_specific_actions_2,
-            reference
+            reference,
+            from_short,
+            to_short,
+            source
           ),
           details_html
         )
