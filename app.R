@@ -75,12 +75,31 @@ normalize_effect <- function(effect_value) {
       c("Align", "Synergy") ~ "Synergy",
     effect_value %in%
       c("Conflict", "Tension (trade-off)") ~ "Conflict",
-    effect_value %in%
-      c(
-        "Independent",
-        "Both synergy and conflict"
-      ) ~ "Both synergy and conflict",
+    effect_value %in% c("Independent") ~ "Independent",
+    effect_value %in% c("Both synergy and conflict") ~
+      "Both synergy and conflict",
     TRUE ~ effect_value
+  )
+}
+
+classify_network_effect <- function(effect_value) {
+  effect_norm <- normalize_effect(effect_value)
+  has_synergy <- any(effect_norm %in% c("Synergy"), na.rm = TRUE)
+  has_non_synergy <- any(
+    effect_norm %in% c("Conflict", "Independent"),
+    na.rm = TRUE
+  )
+  has_explicit_mixed <- any(
+    effect_norm %in% c("Both synergy and conflict"),
+    na.rm = TRUE
+  )
+
+  case_when(
+    has_explicit_mixed ~ "Both synergy and conflict",
+    has_synergy & has_non_synergy ~ "Both synergy and conflict",
+    has_synergy ~ "Synergy",
+    has_non_synergy ~ "Non-synergy",
+    TRUE ~ "Both synergy and conflict"
   )
 }
 
@@ -200,8 +219,9 @@ type_choices <- intersect(
 country_choices <- sort(unique(interactions_enriched$country))
 theme_choices <- sort(unique(interactions_enriched$theme))
 effect_choices <- c(
-  "Conflict",
   "Synergy",
+  "Conflict",
+  "Independent",
   "Both synergy and conflict"
 )
 effect_choices <- intersect(
@@ -236,7 +256,7 @@ sdg_palette <- c(
 
 amr_color <- "#031816"
 effect_palette <- c(
-  "Conflict" = "#C62828",
+  "Non-synergy" = "#C62828",
   "Synergy" = "#2E7D32",
   "Both synergy and conflict" = "#F9A825"
 )
@@ -549,8 +569,8 @@ ui <- page_navbar(
             metric_card("metric_tradeoff", "Conflicts", "metric-tradeoff"),
             metric_card(
               "metric_mixed",
-              "Both synergy & conflict",
-              "metric-mixed"
+              "Independent",
+              "metric-independent"
             ),
             metric_card("metric_total", "Total interactions", "metric-total")
           ),
@@ -558,10 +578,10 @@ ui <- page_navbar(
           div(
             class = "legend-pills",
             span(class = "legend-pill legend-synergy", "Synergy"),
-            span(class = "legend-pill legend-tradeoff", "Conflict"),
+            span(class = "legend-pill legend-tradeoff", "Non-synergy edge"),
             span(
               class = "legend-pill legend-mixed",
-              "Both synergy and conflict"
+              "Mixed edge"
             ),
             span(class = "legend-pill legend-amr", "AMR objective"),
             span(class = "legend-pill legend-sdg", "SDG goal")
@@ -884,7 +904,7 @@ ui <- page_navbar(
                 p(
                   "Use the combined ",
                   tags$strong("Interaction types & effect"),
-                  " panel to narrow by family (AMR\u2013SDG, etc.) and effect (Synergy, Conflict, or Both), then press ",
+                  " panel to narrow by family (AMR\u2013SDG, etc.) and effect (Synergy, Conflict, Independent, or Both synergy and conflict), then press ",
                   tags$strong("Apply filters"),
                   "."
                 )
@@ -990,8 +1010,10 @@ ui <- page_navbar(
               div(class = "g-legend-line g-line-tradeoff"),
               div(
                 class = "g-legend-detail",
-                tags$strong("Conflict"),
-                p("The two objectives are in tension.")
+                tags$strong("Non-synergy edge"),
+                p(
+                  "Only conflict and/or independent relationships are present in the current view."
+                )
               )
             ),
             div(
@@ -999,9 +1021,9 @@ ui <- page_navbar(
               div(class = "g-legend-line g-line-mixed"),
               div(
                 class = "g-legend-detail",
-                tags$strong("Both synergy and conflict"),
+                tags$strong("Mixed edge"),
                 p(
-                  "The two objectives have both reinforcing and conflicting interactions."
+                  "At least one synergy and one non-synergy relationship are present in the current view."
                 )
               )
             )
@@ -1653,9 +1675,7 @@ server <- function(input, output, session) {
   })
 
   output$metric_mixed <- renderText({
-    format_count(sum(
-      displayed_interactions()$effect == "Both synergy and conflict"
-    ))
+    format_count(sum(displayed_interactions()$effect == "Independent"))
   })
 
   output$metric_total <- renderText({
@@ -1780,64 +1800,66 @@ server <- function(input, output, session) {
           )
 
         if (nrow(df) > 0) {
+          collapse_unique <- function(x) {
+            x <- x[!is.na(x) & nzchar(x)]
+            x <- unique(x)
+            if (length(x) == 0) "Not specified" else paste(x, collapse = ", ")
+          }
+
           plot_edges <- df %>%
-            mutate(
-              effect_safe = ifelse(
-                is.na(effect),
-                "Both synergy and conflict",
-                effect
-              )
+            group_by(from, to, source) %>%
+            summarise(
+              from_short = dplyr::first(from_short),
+              to_short = dplyr::first(to_short),
+              countries = collapse_unique(country),
+              themes = collapse_unique(theme),
+              interaction_types = collapse_unique(interaction_type),
+              network_effect = classify_network_effect(effect),
+              effect_breakdown = paste(
+                names(sort(table(effect), decreasing = TRUE)),
+                " (",
+                as.integer(sort(table(effect), decreasing = TRUE)),
+                ")",
+                sep = "",
+                collapse = ", "
+              ),
+              relationship_count = dplyr::n(),
+              .groups = "drop"
             ) %>%
             mutate(
-              edge_color = edge_color_with_alpha(effect_safe),
+              edge_color = edge_color_with_alpha(network_effect),
               width = 2.6,
-              dashes = source == "Objective",
+              dashes = !is.na(source) & source == "Objective",
               edge_title = paste0(
                 "<b>",
                 from_short,
                 " -> ",
                 to_short,
                 "</b><br>",
-                "Country: ",
-                country,
+                "Countries: ",
+                countries,
                 "<br>",
-                "Theme: ",
-                theme,
+                "Themes: ",
+                themes,
                 "<br>",
                 "Type: ",
-                interaction_type,
-                "<br>",
-                "Effect: ",
-                effect,
+                interaction_types,
                 "<br>",
                 "Policy layer: ",
-                ifelse(is.na(source), "Not specified", source),
+                ifelse(is.na(source) | !nzchar(source), "Not specified", source),
                 "<br>",
-                "Direct or indirect: ",
-                ifelse(
-                  is.na(direct_or_indirect),
-                  "Not specified",
-                  direct_or_indirect
-                ),
+                "Edge colour class: ",
+                network_effect,
                 "<br>",
-                "Bidirectional: ",
-                ifelse(isTRUE(bidirectional), "Yes", "No"),
+                "Effects in current view: ",
+                effect_breakdown,
                 "<br>",
-                "Policy tension: ",
-                policy_tension,
-                "<br>",
-                "Summary: ",
-                interaction_summary,
-                "<br>",
-                "Evidence: ",
-                evidence_level,
-                "<br>",
-                "Reference: ",
-                reference
+                "Relationships in current view: ",
+                relationship_count
               )
             ) %>%
             transmute(
-              id = edge_id,
+              id = paste(from, to, source, sep = "::"),
               from,
               to,
               title = edge_title,
@@ -2174,7 +2196,12 @@ server <- function(input, output, session) {
       htmltools::htmlEscape(text_value(x), attribute = TRUE)
     }
 
-    block_html <- function(title, value, extra_class = "") {
+    block_html <- function(
+      title,
+      value,
+      extra_class = "",
+      role_class = ""
+    ) {
       text <- text_value(value, missing = "")
       if (!nzchar(text)) {
         content_html <- "<div class='it-details-empty'>Not available</div>"
@@ -2214,9 +2241,13 @@ server <- function(input, output, session) {
         }
       }
 
+      block_classes <- stringr::str_squish(
+        paste("it-details-block", extra_class, role_class)
+      )
+
       sprintf(
-        "<div class='it-details-block %s'><div class='it-details-title'>%s</div><div class='it-details-text'>%s</div></div>",
-        extra_class,
+        "<div class='%s'><div class='it-details-title'>%s</div><div class='it-details-text'>%s</div></div>",
+        block_classes,
         htmltools::htmlEscape(title),
         content_html
       )
@@ -2281,12 +2312,19 @@ server <- function(input, output, session) {
       source
     ) {
       layer <- text_value(source)
-      obj_class <- if (identical(layer, "Objective")) "it-details-block-layer-objective" else ""
-      act_class <- if (identical(layer, "Implementation")) "it-details-block-layer-implementation" else ""
+      layer_key <- stringr::str_to_lower(layer)
+      panel_class <- dplyr::case_when(
+        identical(layer_key, "objective") ~ "it-details-panel-layer-objective",
+        identical(layer_key, "implementation") ~
+          "it-details-panel-layer-implementation",
+        TRUE ~ ""
+      )
+      obj_class <- if (identical(layer_key, "objective")) "it-details-block-layer-objective" else ""
+      act_class <- if (identical(layer_key, "implementation")) "it-details-block-layer-implementation" else ""
 
       sprintf(
         paste0(
-          "<div class='it-details-panel'>",
+          "<div class='it-details-panel %s'>",
           "<div class='it-details-hero'>",
           "%s",
           "</div>",
@@ -2295,12 +2333,41 @@ server <- function(input, output, session) {
           "</div>",
           "</div>"
         ),
-        block_html("Interaction summary", summary),
-        block_html(paste0(text_value(from_short), " – objective"), obj1, obj_class),
-        block_html(paste0(text_value(to_short),   " – objective"), obj2, obj_class),
-        block_html(paste0(text_value(from_short), " – specific actions"), act1, act_class),
-        block_html(paste0(text_value(to_short),   " – specific actions"), act2, act_class),
-        block_html("Reference", reference)
+        panel_class,
+        block_html(
+          "Interaction summary",
+          summary,
+          role_class = "it-details-block-summary"
+        ),
+        block_html(
+          paste0(text_value(from_short), " – objective"),
+          obj1,
+          obj_class,
+          "it-details-block-objective"
+        ),
+        block_html(
+          paste0(text_value(to_short), " – objective"),
+          obj2,
+          obj_class,
+          "it-details-block-objective"
+        ),
+        block_html(
+          paste0(text_value(from_short), " – specific actions"),
+          act1,
+          act_class,
+          "it-details-block-actions"
+        ),
+        block_html(
+          paste0(text_value(to_short), " – specific actions"),
+          act2,
+          act_class,
+          "it-details-block-actions"
+        ),
+        block_html(
+          "Reference",
+          reference,
+          role_class = "it-details-block-reference"
+        )
       )
     }
 
@@ -2319,6 +2386,7 @@ server <- function(input, output, session) {
           dplyr::case_when(
             identical(x, "Conflict") ~ "it-badge-effect-conflict",
             identical(x, "Synergy") ~ "it-badge-effect-synergy",
+            identical(x, "Independent") ~ "it-badge-effect-independent",
             TRUE ~ "it-badge-effect-mixed"
           )
         })
