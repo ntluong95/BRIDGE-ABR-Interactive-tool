@@ -2388,15 +2388,14 @@ server <- function(input, output, session) {
         scrollX = TRUE,
         order = list(list(0, "asc")),
         columnDefs = list(
-          list(visible = FALSE, targets = 7),
+          list(visible = FALSE, targets = c(4, 7)),
           list(orderable = FALSE, targets = c(6, 7)),
-          list(width = "19%", targets = 0),
-          list(width = "19%", targets = 1),
-          list(width = "11%", targets = 2),
-          list(width = "11%", targets = 3),
-          list(width = "16%", targets = 4),
-          list(width = "18%", targets = 5),
-          list(width = "6%", targets = 6)
+          list(width = "22%", targets = 0),
+          list(width = "22%", targets = 1),
+          list(width = "13%", targets = 2),
+          list(width = "13%", targets = 3),
+          list(width = "22%", targets = 5),
+          list(width = "8%", targets = 6)
         ),
         dom = "<'it-toolbar'lf>tip"
       )
